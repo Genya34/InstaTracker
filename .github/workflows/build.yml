@@ -21,6 +21,13 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
+    - name: Install Gradle 8.4
+      run: |
+        wget -q https://services.gradle.org/distributions/gradle-8.4-bin.zip -O /tmp/gradle.zip
+        sudo unzip -q /tmp/gradle.zip -d /opt/
+        sudo ln -sf /opt/gradle-8.4/bin/gradle /usr/local/bin/gradle
+        gradle --version
+
     - name: Generate Gradle Wrapper
       run: |
         gradle wrapper --gradle-version 8.4
