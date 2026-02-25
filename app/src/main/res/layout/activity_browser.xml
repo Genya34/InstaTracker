@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#7B1FA2"
+        android:padding="12dp"
+        android:layout_alignParentTop="true">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Загрузка..."
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvHint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1. Войдите в Instagram, если нужно\n2. Прокрутите список вниз до конца\n3. Нажмите кнопку внизу справа"
+            android:textColor="#D1C4E9"
+            android:textSize="12sp"
+            android:layout_marginTop="4dp" />
+
+    </LinearLayout>
+
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/topBar" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabCollect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="16dp"
+        android:src="@android:drawable/ic_menu_save"
+        app:tint="@android:color/white"
+        app:backgroundTint="#4CAF50" />
+
+    <TextView
+        android:id="@+id/tvCollectHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toStartOf="@id/fabCollect"
+        android:layout_marginBottom="28dp"
+        android:layout_marginEnd="8dp"
+        android:text="Нажмите, чтобы собрать имена →"
+        android:textColor="#4CAF50"
+        android:textStyle="bold"
+        android:textSize="13sp"
+        android:background="#FFFFFF"
+        android:padding="8dp" />
+
+</RelativeLayout>
