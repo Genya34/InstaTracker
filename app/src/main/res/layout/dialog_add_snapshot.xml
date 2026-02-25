@@ -8,10 +8,34 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Новый снимок подписчиков"
+        android:text="Новый снимок"
         android:textSize="18sp"
         android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnBrowser"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🌐 Получить автоматически через браузер"
+        android:textSize="14sp"
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="#4CAF50"
+        android:textColor="@android:color/white" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#E0E0E0"
         android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Или введите вручную:"
+        android:textSize="13sp"
+        android:textColor="#888"
+        android:layout_marginBottom="8dp" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
@@ -27,7 +51,7 @@
     <EditText
         android:id="@+id/etUsernames"
         android:layout_width="match_parent"
-        android:layout_height="180dp"
+        android:layout_height="150dp"
         android:gravity="top"
         android:inputType="textMultiLine"
         android:background="@drawable/edit_text_bg"
@@ -39,6 +63,16 @@
         android:id="@+id/btnImportJson"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Импорт из JSON" />
+        android:layout_marginTop="8dp"
+        android:text="📂 Импорт из JSON" />
+
+    <Button
+        android:id="@+id/btnInstruction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="📖 Подробная инструкция"
+        android:textColor="#7B1FA2"
+        style="?android:attr/borderlessButtonStyle" />
+
 </LinearLayout>
