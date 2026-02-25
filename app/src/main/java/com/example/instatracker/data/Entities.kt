@@ -41,3 +41,11 @@ data class ChangeResult(
     val oldSnapshot: Snapshot,
     val newSnapshot: Snapshot
 )
+
+data class NonMutualResult(
+    val fans: List<String>,
+    val notFollowingBack: List<String>,
+    val mutualCount: Int,
+    val followersCount: Int,
+    val followingCount: Int
+)
