@@ -5,26 +5,37 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.webkit.CookieManager
+import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.webkit.JavascriptInterface
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import org.json.JSONArray
+import com.google.android.material.button.MaterialButton
 
 class BrowserActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private lateinit var tvTitle: TextView
     private lateinit var tvHint: TextView
-    private lateinit var tvCollectHint: TextView
+    private lateinit var tvProgress: TextView
+    private lateinit var progressBar: ProgressBar
+    private lateinit var btnAutoScroll: MaterialButton
+    private lateinit var btnCollect: MaterialButton
+
     private var targetUsername = ""
     private var listType = ""
+
+    private var isAutoScrolling = false
+    private var noNewContentCount = 0
+    private var lastFoundCount = 0
+    private val scrollHandler = Handler(Looper.getMainLooper())
 
     companion object {
         const val EXTRA_USERNAME = "username"
@@ -42,7 +53,10 @@ class BrowserActivity : AppCompatActivity() {
 
         tvTitle = findViewById(R.id.tvTitle)
         tvHint = findViewById(R.id.tvHint)
-        tvCollectHint = findViewById(R.id.tvCollectHint)
+        tvProgress = findViewById(R.id.tvProgress)
+        progressBar = findViewById(R.id.progressBar)
+        btnAutoScroll = findViewById(R.id.btnAutoScroll)
+        btnCollect = findViewById(R.id.btnCollect)
         webView = findViewById(R.id.webView)
 
         val typeText = if (listType == "followers") "подписчиков" else "подписок"
@@ -74,14 +88,13 @@ class BrowserActivity : AppCompatActivity() {
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
-                val typeText2 = if (listType == "followers") "подписчиков" else "подписок"
-                tvTitle.text = "Сбор $typeText2 @$targetUsername"
+                val t = if (listType == "followers") "подписчиков" else "подписок"
+                tvTitle.text = "Сбор $t @$targetUsername"
 
                 if (url?.contains("login") == true) {
-                    tvHint.text = "Войдите в свой аккаунт Instagram"
+                    tvHint.text = "⚠️ Войдите в свой аккаунт Instagram"
                 } else {
-                    tvHint.text = "1. Прокрутите список вниз до конца\n" +
-                            "2. Нажмите зелёную кнопку"
+                    tvHint.text = "Нажмите «Автопрокрутка» или прокрутите вручную"
                 }
             }
         }
@@ -89,17 +102,170 @@ class BrowserActivity : AppCompatActivity() {
         webView.webChromeClient = WebChromeClient()
 
         val path = if (listType == "followers") "followers" else "following"
-        val url = "https://www.instagram.com/$targetUsername/$path/"
-        webView.loadUrl(url)
+        webView.loadUrl("https://www.instagram.com/$targetUsername/$path/")
 
-        findViewById<FloatingActionButton>(R.id.fabCollect).setOnClickListener {
+        btnAutoScroll.setOnClickListener {
+            if (isAutoScrolling) {
+                stopAutoScroll()
+            } else {
+                startAutoScroll()
+            }
+        }
+
+        btnCollect.setOnClickListener {
             collectUsernames()
         }
     }
 
+    // ══════════════════════════════════════
+    // АВТОПРОКРУТКА
+    // ══════════════════════════════════════
+
+    private fun startAutoScroll() {
+        isAutoScrolling = true
+        noNewContentCount = 0
+        lastFoundCount = 0
+
+        btnAutoScroll.text = "⏹ Остановить"
+        btnAutoScroll.setBackgroundColor(0xFFEF4444.toInt())
+        progressBar.visibility = View.VISIBLE
+        tvProgress.text = "⏳ Начинаю прокрутку..."
+
+        doOneScroll()
+    }
+
+    private fun stopAutoScroll() {
+        isAutoScrolling = false
+        scrollHandler.removeCallbacksAndMessages(null)
+
+        btnAutoScroll.text = "🔄 Автопрокрутка"
+        btnAutoScroll.setBackgroundColor(0xFF6366F1.toInt())
+        progressBar.visibility = View.GONE
+
+        if (lastFoundCount > 0) {
+            tvProgress.text = "✅ Найдено ~$lastFoundCount пользователей. Нажмите «Собрать»"
+        } else {
+            tvProgress.text = "Прокрутка остановлена"
+        }
+    }
+
+    private fun doOneScroll() {
+        if (!isAutoScrolling) return
+
+        val js = """
+            (function() {
+                var scrollable = null;
+                var maxDiff = 0;
+
+                var allDivs = document.querySelectorAll('div');
+                for (var i = 0; i < allDivs.length; i++) {
+                    var el = allDivs[i];
+                    var diff = el.scrollHeight - el.clientHeight;
+                    if (diff > 50) {
+                        var style = window.getComputedStyle(el);
+                        var ov = style.overflowY;
+                        if (ov === 'auto' || ov === 'scroll' || ov === 'hidden') {
+                            if (diff > maxDiff) {
+                                maxDiff = diff;
+                                scrollable = el;
+                            }
+                        }
+                    }
+                }
+
+                if (!scrollable) {
+                    scrollable = document.scrollingElement || document.documentElement;
+                }
+
+                var prevHeight = scrollable.scrollHeight;
+                scrollable.scrollTo({
+                    top: scrollable.scrollHeight,
+                    behavior: 'smooth'
+                });
+
+                var count = 0;
+                var seen = {};
+                var links = document.querySelectorAll('a[href]');
+                for (var i = 0; i < links.length; i++) {
+                    var href = links[i].getAttribute('href');
+                    if (!href) continue;
+                    var m = href.match(/^\/([a-zA-Z0-9][a-zA-Z0-9._]{0,28})\/?$/);
+                    if (m) {
+                        var name = m[1].toLowerCase();
+                        if (!seen[name]) {
+                            seen[name] = true;
+                            count++;
+                        }
+                    }
+                }
+
+                setTimeout(function() {
+                    var newHeight = scrollable.scrollHeight;
+                    var hasMore = newHeight > prevHeight;
+                    Android.onScrollResult(hasMore ? 'more' : 'end', count);
+                }, 2000);
+            })()
+        """.trimIndent()
+
+        webView.evaluateJavascript(js, null)
+    }
+
+    inner class WebAppInterface {
+        @JavascriptInterface
+        fun onScrollResult(status: String, count: Int) {
+            runOnUiThread {
+                if (!isAutoScrolling) return@runOnUiThread
+
+                lastFoundCount = count
+                tvProgress.text = "⏳ Прокрутка... найдено ~$count пользователей"
+
+                if (status == "more") {
+                    noNewContentCount = 0
+                    scrollHandler.postDelayed({ doOneScroll() }, 1000)
+                } else {
+                    noNewContentCount++
+                    if (noNewContentCount >= 3) {
+                        isAutoScrolling = false
+                        progressBar.visibility = View.GONE
+                        btnAutoScroll.text = "🔄 Автопрокрутка"
+                        btnAutoScroll.setBackgroundColor(0xFF6366F1.toInt())
+                        tvProgress.text = "✅ Прокрутка завершена! Найдено ~$count. Собираю..."
+                        scrollHandler.postDelayed({ collectUsernames() }, 500)
+                    } else {
+                        scrollHandler.postDelayed({ doOneScroll() }, 2000)
+                    }
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun receiveUsernames(json: String) {
+            runOnUiThread {
+                try {
+                    val array = org.json.JSONArray(json)
+                    val names = mutableListOf<String>()
+                    for (i in 0 until array.length()) {
+                        names.add(array.getString(i))
+                    }
+                    showResultDialog(names)
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this@BrowserActivity,
+                        "Ошибка: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
+    // ══════════════════════════════════════
+    // СБОР ИМЁН
+    // ══════════════════════════════════════
+
     private fun collectUsernames() {
-        tvTitle.text = "Собираю имена..."
-        tvCollectHint.visibility = View.GONE
+        tvProgress.text = "⏳ Собираю имена..."
+        progressBar.visibility = View.VISIBLE
 
         val skipList = listOf(
             "explore", "reels", "direct", "accounts", "p",
@@ -107,9 +273,9 @@ class BrowserActivity : AppCompatActivity() {
             "press", "api", "jobs", "nametag", "session",
             "login", "emails", "newsroom", "download", "contact",
             "lite", "directory", "legal", "locations", "tags",
-            "tv", targetUsername.lowercase()
+            "tv", "reel", "web", "developer", "embed",
+            targetUsername.lowercase()
         )
-
         val skipJson = skipList.joinToString(",") { "'$it'" }
 
         val js = """
@@ -127,15 +293,11 @@ class BrowserActivity : AppCompatActivity() {
                     var name = match[1].toLowerCase();
                     if (seen[name] || skip.indexOf(name) !== -1) continue;
 
-                    var hasText = false;
-                    var spans = links[i].querySelectorAll('span');
-                    for (var j = 0; j < spans.length; j++) {
-                        if (spans[j].textContent.trim().length > 0) {
-                            hasText = true;
-                            break;
-                        }
-                    }
-                    if (!hasText && links[i].textContent.trim().length === 0) continue;
+                    var hasContent = false;
+                    var spans = links[i].querySelectorAll('span, img');
+                    if (spans.length > 0) hasContent = true;
+                    if (!hasContent && links[i].textContent.trim().length > 0) hasContent = true;
+                    if (!hasContent) continue;
 
                     seen[name] = true;
                     names.push(name);
@@ -148,83 +310,58 @@ class BrowserActivity : AppCompatActivity() {
         webView.evaluateJavascript(js, null)
     }
 
-    inner class WebAppInterface {
-        @JavascriptInterface
-        fun receiveUsernames(json: String) {
-            runOnUiThread {
-                try {
-                    val array = JSONArray(json)
-                    val names = mutableListOf<String>()
-                    for (i in 0 until array.length()) {
-                        names.add(array.getString(i))
-                    }
-                    showResultDialog(names)
-                } catch (e: Exception) {
-                    Toast.makeText(
-                        this@BrowserActivity,
-                        "Ошибка: ${e.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    val typeText = if (listType == "followers") "подписчиков" else "подписок"
-                    tvTitle.text = "Сбор $typeText @$targetUsername"
-                }
-            }
-        }
-    }
-
     private fun showResultDialog(names: List<String>) {
+        progressBar.visibility = View.GONE
+
         if (names.isEmpty()) {
+            tvProgress.text = "❌ Не удалось найти имена"
             AlertDialog.Builder(this)
                 .setTitle("Ничего не найдено")
                 .setMessage(
-                    "Не удалось собрать имена.\n\n" +
-                    "Возможные причины:\n" +
+                    "Возможные причины:\n\n" +
                     "• Вы не вошли в Instagram\n" +
                     "• Список ещё не загрузился\n" +
                     "• Профиль закрытый\n\n" +
-                    "Попробуйте:\n" +
-                    "1. Войти в аккаунт\n" +
-                    "2. Открыть список подписчиков\n" +
-                    "3. Прокрутить вниз\n" +
-                    "4. Нажать кнопку снова"
+                    "Попробуйте войти в аккаунт и нажать «Автопрокрутка» снова"
                 )
                 .setPositiveButton("OK", null)
                 .show()
-
-            val typeText = if (listType == "followers") "подписчиков" else "подписок"
-            tvTitle.text = "Сбор $typeText @$targetUsername"
-            tvCollectHint.visibility = View.VISIBLE
             return
         }
 
-        val preview = names.take(15).joinToString("\n") { "@$it" }
-        val moreText = if (names.size > 15) "\n\n... и ещё ${names.size - 15}" else ""
+        tvProgress.text = "✅ Найдено: ${names.size} пользователей"
+
+        val preview = names.take(20).joinToString("\n") { "  @$it" }
+        val moreText = if (names.size > 20) "\n\n  ... и ещё ${names.size - 20}" else ""
 
         AlertDialog.Builder(this)
-            .setTitle("Найдено: ${names.size} имён")
+            .setTitle("✅ Найдено: ${names.size}")
             .setMessage("$preview$moreText")
-            .setPositiveButton("Сохранить") { _, _ ->
+            .setPositiveButton("💾 Сохранить") { _, _ ->
                 val intent = Intent()
                 intent.putExtra(EXTRA_RESULT_NAMES, names.joinToString("\n"))
                 setResult(RESULT_OK, intent)
                 finish()
             }
-            .setNeutralButton("Прокрутить ещё") { _, _ ->
-                val typeText = if (listType == "followers") "подписчиков" else "подписок"
-                tvTitle.text = "Сбор $typeText @$targetUsername"
-                tvCollectHint.visibility = View.VISIBLE
-                Toast.makeText(this,
-                    "Прокрутите список дальше и нажмите кнопку снова",
-                    Toast.LENGTH_LONG).show()
+            .setNeutralButton("🔄 Прокрутить ещё") { _, _ ->
+                tvProgress.text = "Прокрутите список дальше или нажмите «Автопрокрутка»"
             }
             .setNegativeButton("Отмена", null)
             .setCancelable(false)
             .show()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        scrollHandler.removeCallbacksAndMessages(null)
+        isAutoScrolling = false
+    }
+
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (webView.canGoBack()) {
+        if (isAutoScrolling) {
+            stopAutoScroll()
+        } else if (webView.canGoBack()) {
             webView.goBack()
         } else {
             super.onBackPressed()
