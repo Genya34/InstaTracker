@@ -3,15 +3,17 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/background">
 
+    <!-- Top bar -->
     <LinearLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="#7B1FA2"
-        android:padding="12dp"
+        android:background="@drawable/gradient_toolbar"
+        android:padding="16dp"
         android:layout_alignParentTop="true">
 
         <TextView
@@ -20,50 +22,98 @@
             android:layout_height="wrap_content"
             android:text="Загрузка..."
             android:textColor="@android:color/white"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvHint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="1. Войдите в Instagram, если нужно\n2. Прокрутите список вниз до конца\n3. Нажмите кнопку внизу справа"
-            android:textColor="#D1C4E9"
-            android:textSize="12sp"
+            android:text="Войдите в Instagram, если нужно"
+            android:textColor="#C7D2FE"
+            android:textSize="13sp"
             android:layout_marginTop="4dp" />
-
     </LinearLayout>
 
+    <!-- Bottom bar -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="8dp"
+        android:layout_margin="12dp"
+        app:cardBackgroundColor="@color/surface">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Progress text -->
+            <TextView
+                android:id="@+id/tvProgress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Прокрутите список вниз или нажмите «Автопрокрутка»"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:textAlignment="center"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Progress bar (hidden by default) -->
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:visibility="gone"
+                android:layout_marginBottom="12dp"
+                android:indeterminate="true"
+                android:indeterminateTint="@color/primary" />
+
+            <!-- Buttons row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAutoScroll"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="🔄 Автопрокрутка"
+                    android:textSize="13sp"
+                    android:layout_marginEnd="6dp"
+                    app:cornerRadius="14dp"
+                    app:backgroundTint="@color/primary"
+                    android:textColor="@android:color/white" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCollect"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="✅ Собрать"
+                    android:textSize="13sp"
+                    android:layout_marginStart="6dp"
+                    app:cornerRadius="14dp"
+                    app:backgroundTint="@color/success"
+                    android:textColor="@android:color/white" />
+
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- WebView -->
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/topBar" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabCollect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_margin="16dp"
-        android:src="@android:drawable/ic_menu_save"
-        app:tint="@android:color/white"
-        app:backgroundTint="#4CAF50" />
-
-    <TextView
-        android:id="@+id/tvCollectHint"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_toStartOf="@id/fabCollect"
-        android:layout_marginBottom="28dp"
-        android:layout_marginEnd="8dp"
-        android:text="Нажмите, чтобы собрать имена →"
-        android:textColor="#4CAF50"
-        android:textStyle="bold"
-        android:textSize="13sp"
-        android:background="#FFFFFF"
-        android:padding="8dp" />
+        android:layout_below="@id/topBar"
+        android:layout_above="@id/bottomBar" />
 
 </RelativeLayout>
