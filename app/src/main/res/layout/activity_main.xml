@@ -11,25 +11,36 @@
         android:layout_height="wrap_content">
 
         <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="#7B1FA2"
             app:title="InstaTracker"
-            app:titleTextColor="@android:color/white" />
+            app:subtitle="Отслеживаемые аккаунты"
+            app:titleTextColor="@android:color/white"
+            app:subtitleTextColor="#D1C4E9" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#7B1FA2"
+            android:visibility="gone"
             app:tabSelectedTextColor="@android:color/white"
             app:tabIndicatorColor="@android:color/white" />
     </com.google.android.material.appbar.AppBarLayout>
+
+    <FrameLayout
+        android:id="@+id/mainContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:visibility="gone"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
