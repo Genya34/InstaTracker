@@ -5,7 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Snapshot::class, Follower::class], version = 1, exportSchema = false)
+@Database(
+    entities = [Account::class, Snapshot::class, Follower::class],
+    version = 2,
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun followerDao(): FollowerDao
 
@@ -17,8 +21,10 @@ abstract class AppDatabase : RoomDatabase() {
                 Room.databaseBuilder(
                     ctx.applicationContext,
                     AppDatabase::class.java,
-                    "insta_tracker.db"
-                ).build().also { INSTANCE = it }
+                    "insta_tracker_v2.db"
+                )
+                .fallbackToDestructiveMigration()
+                .build().also { INSTANCE = it }
             }
         }
     }
