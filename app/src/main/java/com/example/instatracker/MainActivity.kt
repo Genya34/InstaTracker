@@ -38,10 +38,6 @@ class MainActivity : AppCompatActivity() {
     var currentScreen = "accounts"
     private var pendingLabel = ""
 
-    companion object {
-        const val JS_SCRIPT = """javascript:void(function(){var u=[];document.querySelectorAll('span').forEach(function(e){var t=e.textContent.trim();if(t.length>1&&t.length<31&&t.indexOf(' ')===-1&&/^[a-zA-Z0-9._]+$/.test(t)){u.push(t.toLowerCase())}});var r=[];u.forEach(function(v){if(r.indexOf(v)===-1)r.push(v)});document.open();document.write('<html><head><title>'+r.length+'</title></head><body style="margin:16px"><h3>Найдено: '+r.length+' имён</h3><p>Выделите всё, скопируйте, вставьте в InstaTracker</p><textarea id="t" style="width:100%;height:80vh;font-size:14px" readonly>'+r.join('\n')+'</textarea></body></html>');document.close()})()"""
-    }
-
     private val jsonPicker = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -86,7 +82,7 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this,
             MainViewModelFactory(application))[MainViewModel::class.java]
 
-        binding.toolbar.menu.add("Инструкция").apply {
+        binding.toolbar.menu.add("Помощь").apply {
             setIcon(android.R.drawable.ic_menu_help)
             setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
         }
@@ -123,6 +119,10 @@ class MainActivity : AppCompatActivity() {
         browserLauncher.launch(intent)
     }
 
+    // ══════════════════════════════════════
+    // ИНСТРУКЦИЯ
+    // ══════════════════════════════════════
+
     fun showInstructionDialog() {
         val scroll = ScrollView(this)
         val layout = LinearLayout(this).apply {
@@ -131,105 +131,59 @@ class MainActivity : AppCompatActivity() {
         }
         scroll.addView(layout)
 
-        val title = TextView(this).apply {
-            text = "📱 Как получить список подписчиков"
-            textSize = 18f
+        fun addTitle(text: String, color: Int = 0xFF0F172A.toInt()) {
+            layout.addView(TextView(this).apply {
+                this.text = text
+                textSize = 17f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(color)
+                val p = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT)
+                p.topMargin = 24
+                p.bottomMargin = 8
+                layoutParams = p
+            })
+        }
+
+        fun addText(text: String) {
+            layout.addView(TextView(this).apply {
+                this.text = text
+                textSize = 14f
+                setTextColor(0xFF334155.toInt())
+                setLineSpacing(4f, 1f)
+            })
+        }
+
+        layout.addView(TextView(this).apply {
+            text = "📱 Инструкция"
+            textSize = 22f
             setTypeface(null, android.graphics.Typeface.BOLD)
-        }
-        layout.addView(title)
-        addSpacer(layout, 24)
+            setTextColor(0xFF0F172A.toInt())
+        })
 
-        val m1 = TextView(this).apply {
-            text = "━━ Способ 1: Автоматически ━━"
-            textSize = 15f
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(0xFF4CAF50.toInt())
-        }
-        layout.addView(m1)
+        addTitle("✨ Способ 1: Автоматически", 0xFF10B981.toInt())
+        addText("1. Выберите аккаунт → Подписчики или Подписки\n" +
+                "2. Нажмите ➕ → «Получить автоматически»\n" +
+                "3. Войдите в Instagram (только первый раз)\n" +
+                "4. Нажмите «Автопрокрутка» — список прокрутится сам!\n" +
+                "5. Имена соберутся автоматически\n" +
+                "6. Нажмите «Сохранить»")
 
-        val s1 = TextView(this).apply {
-            text = """
-                |
-                |1. Выберите аккаунт → Подписчики
-                |   или Подписки
-                |2. Нажмите ➕ → «Получить
-                |   автоматически через браузер»
-                |3. Войдите в Instagram (только
-                |   в первый раз)
-                |4. Прокрутите список ВНИЗ ДО КОНЦА
-                |5. Нажмите зелёную кнопку
-                |6. Приложение само соберёт все имена!
-                |
-            """.trimMargin()
-            textSize = 14f
-        }
-        layout.addView(s1)
-        addSpacer(layout, 16)
+        addTitle("📋 Способ 2: Вручную", 0xFF6366F1.toInt())
+        addText("Откройте Instagram → профиль человека → подписчики.\n" +
+                "Перепишите имена в приложение по одному на строку.")
 
-        val m2 = TextView(this).apply {
-            text = "━━ Способ 2: Через Chrome + скрипт ━━"
-            textSize = 15f
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(0xFF7B1FA2.toInt())
-        }
-        layout.addView(m2)
+        addTitle("📂 Способ 3: JSON из Instagram", 0xFF6366F1.toInt())
+        addText("Только для своего аккаунта:\n" +
+                "Instagram → Настройки → Ваши действия → Скачать данные → " +
+                "Подписчики → формат JSON → скачайте и импортируйте в приложение.")
 
-        val s2 = TextView(this).apply {
-            text = """
-                |
-                |1. Откройте Chrome
-                |2. Перейдите на instagram.com
-                |3. Откройте профиль → подписчики
-                |4. Прокрутите вниз
-                |5. Скопируйте скрипт (кнопка ниже)
-                |6. Вставьте в адресную строку Chrome
-                |7. Допишите javascript: в начало
-                |8. Нажмите Enter
-                |9. Скопируйте список имён
-                |10. Вставьте в InstaTracker
-                |
-            """.trimMargin()
-            textSize = 14f
-        }
-        layout.addView(s2)
-
-        val btnCopy = com.google.android.material.button.MaterialButton(this).apply {
-            text = "📋 Скопировать скрипт"
-            val params = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
-            params.topMargin = 8
-            layoutParams = params
-            setOnClickListener {
-                copyToClipboard("js", JS_SCRIPT)
-                Toast.makeText(context, "✅ Скопировано!", Toast.LENGTH_SHORT).show()
-            }
-        }
-        layout.addView(btnCopy)
-        addSpacer(layout, 16)
-
-        val m3 = TextView(this).apply {
-            text = "━━ Способ 3: Вручную / JSON ━━"
-            textSize = 15f
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(0xFF7B1FA2.toInt())
-        }
-        layout.addView(m3)
-
-        val s3 = TextView(this).apply {
-            text = """
-                |
-                |Вручную: перепишите имена из
-                |Instagram по одному на строку
-                |
-                |JSON: скачайте данные из Instagram
-                |(Настройки → Ваши действия →
-                |Скачать данные → Подписчики → JSON)
-                |
-            """.trimMargin()
-            textSize = 14f
-        }
-        layout.addView(s3)
+        addTitle("💡 Советы", 0xFF8B5CF6.toInt())
+        addText("• Делайте снимки раз в несколько дней\n" +
+                "• Приложение сравнивает 2 последних снимка\n" +
+                "• Все данные только на вашем телефоне\n" +
+                "• Для закрытых профилей нужно быть подписанным")
 
         AlertDialog.Builder(this)
             .setView(scroll)
@@ -237,17 +191,9 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun addSpacer(layout: LinearLayout, height: Int) {
-        layout.addView(View(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, height)
-        })
-    }
-
-    private fun copyToClipboard(label: String, text: String) {
-        val cb = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        cb.setPrimaryClip(ClipData.newPlainText(label, text))
-    }
+    // ══════════════════════════════════════
+    // ЭКРАНЫ
+    // ══════════════════════════════════════
 
     fun showAccountsList() {
         currentScreen = "accounts"
@@ -256,14 +202,26 @@ class MainActivity : AppCompatActivity() {
         binding.tabLayout.visibility = View.GONE
         binding.viewPager.visibility = View.GONE
         binding.fabAdd.show()
+        binding.fabAdd.text = "Добавить"
 
         val container = binding.mainContainer
         container.visibility = View.VISIBLE
         container.removeAllViews()
 
+        // Если нет аккаунтов, покажем подсказку
+        val emptyView = TextView(this).apply {
+            text = "👋 Добро пожаловать!\n\nНажмите «Добавить», чтобы\nначать отслеживать аккаунт"
+            textSize = 16f
+            setTextColor(0xFF94A3B8.toInt())
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+            setPadding(48, 200, 48, 48)
+            visibility = View.GONE
+        }
+        container.addView(emptyView)
+
         val rv = RecyclerView(this).apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
-            setPadding(0, 8, 0, 200)
+            setPadding(0, 12, 0, 200)
             clipToPadding = false
         }
         container.addView(rv)
@@ -273,13 +231,18 @@ class MainActivity : AppCompatActivity() {
             onDelete = { account ->
                 AlertDialog.Builder(this)
                     .setTitle("Удалить @${account.username}?")
+                    .setMessage("Все снимки этого аккаунта будут удалены")
                     .setPositiveButton("Удалить") { _, _ -> viewModel.deleteAccount(account) }
                     .setNegativeButton("Отмена", null)
                     .show()
             }
         )
         rv.adapter = adapter
-        viewModel.accounts.observe(this) { adapter.submitList(it) }
+        viewModel.accounts.observe(this) { list ->
+            adapter.submitList(list)
+            emptyView.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+            rv.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
+        }
     }
 
     fun showChooseType(account: Account) {
@@ -296,27 +259,60 @@ class MainActivity : AppCompatActivity() {
 
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(32, 48, 32, 32)
+            setPadding(24, 32, 24, 32)
         }
 
-        val btnFollowers = com.google.android.material.button.MaterialButton(this).apply {
-            text = "📥 Подписчики\n(кто подписан на @${account.username})"
-            textSize = 16f
-            setPadding(32, 48, 32, 48)
+        // Карточка подписчиков
+        val cardFollowers = com.google.android.material.card.MaterialCardView(this).apply {
+            radius = 24f
+            cardElevation = 0f
+            strokeWidth = 2
+            strokeColor = 0xFFE2E8F0.toInt()
+            setCardBackgroundColor(0xFFFFFFFF.toInt())
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT)
+            params.bottomMargin = 16
+            layoutParams = params
             setOnClickListener {
                 viewModel.selectAccount(account.id, "followers")
                 showSnapshotsScreen(account, "followers")
             }
         }
 
-        val btnFollowing = com.google.android.material.button.MaterialButton(this).apply {
-            text = "📤 Подписки\n(на кого подписан @${account.username})"
-            textSize = 16f
-            setPadding(32, 48, 32, 48)
+        val layoutFollowers = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 28, 32, 28)
+        }
+        layoutFollowers.addView(TextView(this).apply {
+            text = "📥 Подписчики"
+            textSize = 20f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(0xFF0F172A.toInt())
+        })
+        layoutFollowers.addView(TextView(this).apply {
+            text = "Кто подписан на @${account.username}"
+            textSize = 14f
+            setTextColor(0xFF64748B.toInt())
+            val p = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT)
+            p.topMargin = 4
+            layoutParams = p
+        })
+        cardFollowers.addView(layoutFollowers)
+
+        // Карточка подписок
+        val cardFollowing = com.google.android.material.card.MaterialCardView(this).apply {
+            radius = 24f
+            cardElevation = 0f
+            strokeWidth = 2
+            strokeColor = 0xFFE2E8F0.toInt()
+            setCardBackgroundColor(0xFFFFFFFF.toInt())
             val params = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT)
-            params.topMargin = 32
+            params.bottomMargin = 16
             layoutParams = params
             setOnClickListener {
                 viewModel.selectAccount(account.id, "following")
@@ -324,8 +320,30 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        layout.addView(btnFollowers)
-        layout.addView(btnFollowing)
+        val layoutFollowing = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 28, 32, 28)
+        }
+        layoutFollowing.addView(TextView(this).apply {
+            text = "📤 Подписки"
+            textSize = 20f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(0xFF0F172A.toInt())
+        })
+        layoutFollowing.addView(TextView(this).apply {
+            text = "На кого подписан @${account.username}"
+            textSize = 14f
+            setTextColor(0xFF64748B.toInt())
+            val p = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT)
+            p.topMargin = 4
+            layoutParams = p
+        })
+        cardFollowing.addView(layoutFollowing)
+
+        layout.addView(cardFollowers)
+        layout.addView(cardFollowing)
         container.addView(layout)
     }
 
@@ -335,6 +353,7 @@ class MainActivity : AppCompatActivity() {
         binding.toolbar.title = "@${account.username}"
         binding.toolbar.subtitle = typeText
         binding.fabAdd.show()
+        binding.fabAdd.text = "Снимок"
         binding.mainContainer.visibility = View.GONE
         binding.tabLayout.visibility = View.VISIBLE
         binding.viewPager.visibility = View.VISIBLE
@@ -346,25 +365,48 @@ class MainActivity : AppCompatActivity() {
         }
 
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, pos ->
-            tab.text = if (pos == 0) "Снимки" else "Изменения"
+            tab.text = if (pos == 0) "📋 Снимки" else "🔄 Изменения"
         }.attach()
     }
+
+    // ══════════════════════════════════════
+    // ДИАЛОГИ
+    // ══════════════════════════════════════
 
     private fun showAddAccountDialog() {
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(48, 32, 48, 0)
+            setPadding(48, 32, 48, 16)
         }
-        val etUsername = EditText(this).apply { hint = "Имя пользователя (без @)" }
-        val etNote = EditText(this).apply { hint = "Заметка (необязательно)" }
+
+        val etUsername = com.google.android.material.textfield.TextInputLayout(this).apply {
+            hint = "Имя пользователя"
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT)
+            params.bottomMargin = 16
+            layoutParams = params
+        }
+        val etUsernameInput = com.google.android.material.textfield.TextInputEditText(this)
+        etUsername.addView(etUsernameInput)
+
+        val etNote = com.google.android.material.textfield.TextInputLayout(this).apply {
+            hint = "Заметка (необязательно)"
+        }
+        val etNoteInput = com.google.android.material.textfield.TextInputEditText(this)
+        etNote.addView(etNoteInput)
+
         layout.addView(etUsername)
         layout.addView(etNote)
 
         AlertDialog.Builder(this)
-            .setTitle("Добавить аккаунт")
+            .setTitle("👤 Добавить аккаунт")
             .setView(layout)
             .setPositiveButton("Добавить") { _, _ ->
-                viewModel.addAccount(etUsername.text.toString(), etNote.text.toString())
+                viewModel.addAccount(
+                    etUsernameInput.text.toString(),
+                    etNoteInput.text.toString()
+                )
             }
             .setNegativeButton("Отмена", null)
             .show()
@@ -416,17 +458,43 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+// ══════════════════════════════════════════
+// ФРАГМЕНТЫ
+// ══════════════════════════════════════════
+
 class SnapshotsListFragment : Fragment() {
     override fun onCreateView(inf: LayoutInflater, c: ViewGroup?, s: Bundle?): View {
+        val layout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+
+        val emptyView = TextView(requireContext()).apply {
+            text = "📸 Пока нет снимков\n\nНажмите «Снимок», чтобы сохранить\nтекущий список подписчиков"
+            textSize = 15f
+            setTextColor(0xFF94A3B8.toInt())
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+            setPadding(48, 160, 48, 48)
+            visibility = View.GONE
+        }
+        layout.addView(emptyView)
+
         val rv = RecyclerView(requireContext()).apply {
             layoutManager = LinearLayoutManager(context)
-            setPadding(0, 8, 0, 200); clipToPadding = false
+            setPadding(0, 12, 0, 200)
+            clipToPadding = false
         }
+        layout.addView(rv)
+
         val vm = (requireActivity() as MainActivity).viewModel
         val adapter = SnapshotsAdapter { vm.deleteSnapshot(it) }
         rv.adapter = adapter
-        vm.snapshots.observe(viewLifecycleOwner) { adapter.submitList(it) }
-        return rv
+        vm.snapshots.observe(viewLifecycleOwner) { list ->
+            adapter.submitList(list)
+            emptyView.visibility = if (list.isNullOrEmpty()) View.VISIBLE else View.GONE
+            rv.visibility = if (list.isNullOrEmpty()) View.GONE else View.VISIBLE
+        }
+
+        return layout
     }
 }
 
@@ -444,12 +512,12 @@ class ChangesFragment : Fragment() {
         vm.compareLastTwo()
         vm.changes.observe(viewLifecycleOwner) { r ->
             if (r == null) {
-                b.tvSummary.text = "Добавьте минимум 2 снимка для сравнения"
+                b.tvSummary.text = "📊 Добавьте минимум 2 снимка,\nчтобы увидеть изменения"
                 b.rvChanges.adapter = UsernameAdapter(emptyList()); return@observe
             }
             val typeNew = if (vm.currentListType == "followers") "Подписались" else "Подписался на"
             val typeGone = if (vm.currentListType == "followers") "Отписались" else "Отписался от"
-            b.tvSummary.text = "✅ $typeNew: ${r.newUsers.size}   ❌ $typeGone: ${r.goneUsers.size}"
+            b.tvSummary.text = "✅ $typeNew: ${r.newUsers.size}\n❌ $typeGone: ${r.goneUsers.size}"
             b.rvChanges.adapter = UsernameAdapter(
                 r.newUsers.map { UsernameItem(it, true) } +
                 r.goneUsers.map { UsernameItem(it, false) })
