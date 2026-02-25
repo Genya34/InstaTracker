@@ -30,6 +30,9 @@ interface FollowerDao {
     @Query("SELECT * FROM snapshots WHERE accountId = :accountId AND listType = :listType ORDER BY timestamp DESC LIMIT 2")
     suspend fun getLastTwoSnapshots(accountId: Long, listType: String): List<Snapshot>
 
+    @Query("SELECT * FROM snapshots WHERE accountId = :accountId AND listType = :listType ORDER BY timestamp DESC LIMIT 1")
+    suspend fun getLatestSnapshot(accountId: Long, listType: String): Snapshot?
+
     @Insert
     suspend fun insertFollowers(followers: List<Follower>)
 
