@@ -19,6 +19,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _changes = MutableLiveData<ChangeResult?>()
     val changes: LiveData<ChangeResult?> = _changes
 
+    private val _nonMutual = MutableLiveData<NonMutualResult?>()
+    val nonMutual: LiveData<NonMutualResult?> = _nonMutual
+
     private val _status = MutableLiveData<String>()
     val status: LiveData<String> = _status
 
@@ -100,6 +103,46 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 goneUsers = (oldSet - newSet).sorted(),
                 oldSnapshot = last[1],
                 newSnapshot = last[0]
+            )
+        }
+    }
+
+    fun computeNonMutual(accountId: Long) {
+        viewModelScope.launch {
+            val followersSnap = dao.getLatestSnapshot(accountId, "followers")
+            val followingSnap = dao.getLatestSnapshot(accountId, "following")
+
+            if (followersSnap == null && followingSnap == null) {
+                _nonMutual.value = null
+                _status.value = "Сначала соберите подписчиков и подписки"
+                return@launch
+            }
+
+            if (followersSnap == null) {
+                _nonMutual.value = null
+                _status.value = "Нет снимка подписчиков. Сначала соберите подписчиков."
+                return@launch
+            }
+
+            if (followingSnap == null) {
+                _nonMutual.value = null
+                _status.value = "Нет снимка подписок. Сначала соберите подписки."
+                return@launch
+            }
+
+            val followers = dao.getFollowerUsernames(followersSnap.id).toSet()
+            val following = dao.getFollowerUsernames(followingSnap.id).toSet()
+
+            val mutual = followers.intersect(following)
+            val fans = (followers - following).sorted()
+            val notFollowingBack = (following - followers).sorted()
+
+            _nonMutual.value = NonMutualResult(
+                fans = fans,
+                notFollowingBack = notFollowingBack,
+                mutualCount = mutual.size,
+                followersCount = followers.size,
+                followingCount = following.size
             )
         }
     }
