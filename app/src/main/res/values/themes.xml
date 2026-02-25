@@ -1,6 +1,11 @@
 <resources>
-    <style name="Theme.InstaTracker" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <item name="colorPrimary">#7B1FA2</item>
+    <style name="Theme.InstaTracker" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_dark</item>
         <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="android:colorBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:navigationBarColor">@color/surface</item>
     </style>
 </resources>
