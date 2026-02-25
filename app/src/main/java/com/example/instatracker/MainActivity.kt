@@ -27,6 +27,7 @@ import com.example.instatracker.data.Account
 import com.example.instatracker.databinding.ActivityMainBinding
 import com.example.instatracker.databinding.DialogAddSnapshotBinding
 import com.example.instatracker.databinding.FragmentChangesBinding
+import com.example.instatracker.databinding.FragmentNonMutualBinding
 import com.example.instatracker.ui.*
 import com.example.instatracker.util.InstagramJsonParser
 import com.google.android.material.tabs.TabLayoutMediator
@@ -98,6 +99,7 @@ class MainActivity : AppCompatActivity() {
                 "accounts" -> showAddAccountDialog()
                 "choose_type" -> { }
                 "snapshots" -> showAddSnapshotDialog()
+                "non_mutual" -> { }
             }
         }
 
@@ -140,24 +142,21 @@ class MainActivity : AppCompatActivity() {
                 val p = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT)
-                p.topMargin = 24
-                p.bottomMargin = 8
+                p.topMargin = 24; p.bottomMargin = 8
                 layoutParams = p
             })
         }
 
         fun addText(text: String) {
             layout.addView(TextView(this).apply {
-                this.text = text
-                textSize = 14f
+                this.text = text; textSize = 14f
                 setTextColor(0xFF334155.toInt())
                 setLineSpacing(4f, 1f)
             })
         }
 
         layout.addView(TextView(this).apply {
-            text = "📱 Инструкция"
-            textSize = 22f
+            text = "📱 Инструкция"; textSize = 22f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(0xFF0F172A.toInt())
         })
@@ -166,22 +165,22 @@ class MainActivity : AppCompatActivity() {
         addText("1. Выберите аккаунт → Подписчики или Подписки\n" +
                 "2. Нажмите ➕ → «Получить автоматически»\n" +
                 "3. Войдите в Instagram (только первый раз)\n" +
-                "4. Нажмите «Автопрокрутка» — список прокрутится сам!\n" +
+                "4. Нажмите «Автопрокрутка»\n" +
                 "5. Имена соберутся автоматически\n" +
                 "6. Нажмите «Сохранить»")
 
-        addTitle("📋 Способ 2: Вручную", 0xFF6366F1.toInt())
-        addText("Откройте Instagram → профиль человека → подписчики.\n" +
-                "Перепишите имена в приложение по одному на строку.")
+        addTitle("🔀 Не взаимные подписки", 0xFF8B5CF6.toInt())
+        addText("1. Соберите И подписчиков И подписки\n" +
+                "2. Нажмите «Не взаимные подписки»\n" +
+                "3. Увидите:\n" +
+                "   👤 Фанаты — подписаны на вас,\n" +
+                "      но вы не подписаны на них\n" +
+                "   💔 Не взаимные — вы подписаны,\n" +
+                "      но они не подписаны на вас")
 
-        addTitle("📂 Способ 3: JSON из Instagram", 0xFF6366F1.toInt())
-        addText("Только для своего аккаунта:\n" +
-                "Instagram → Настройки → Ваши действия → Скачать данные → " +
-                "Подписчики → формат JSON → скачайте и импортируйте в приложение.")
-
-        addTitle("💡 Советы", 0xFF8B5CF6.toInt())
+        addTitle("💡 Советы", 0xFF6366F1.toInt())
         addText("• Делайте снимки раз в несколько дней\n" +
-                "• Приложение сравнивает 2 последних снимка\n" +
+                "• Для не взаимных нужны ОБА списка\n" +
                 "• Все данные только на вашем телефоне\n" +
                 "• Для закрытых профилей нужно быть подписанным")
 
@@ -208,21 +207,17 @@ class MainActivity : AppCompatActivity() {
         container.visibility = View.VISIBLE
         container.removeAllViews()
 
-        // Если нет аккаунтов, покажем подсказку
         val emptyView = TextView(this).apply {
             text = "👋 Добро пожаловать!\n\nНажмите «Добавить», чтобы\nначать отслеживать аккаунт"
-            textSize = 16f
-            setTextColor(0xFF94A3B8.toInt())
+            textSize = 16f; setTextColor(0xFF94A3B8.toInt())
             textAlignment = View.TEXT_ALIGNMENT_CENTER
-            setPadding(48, 200, 48, 48)
-            visibility = View.GONE
+            setPadding(48, 200, 48, 48); visibility = View.GONE
         }
         container.addView(emptyView)
 
         val rv = RecyclerView(this).apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
-            setPadding(0, 12, 0, 200)
-            clipToPadding = false
+            setPadding(0, 12, 0, 200); clipToPadding = false
         }
         container.addView(rv)
 
@@ -262,88 +257,64 @@ class MainActivity : AppCompatActivity() {
             setPadding(24, 32, 24, 32)
         }
 
-        // Карточка подписчиков
-        val cardFollowers = com.google.android.material.card.MaterialCardView(this).apply {
-            radius = 24f
-            cardElevation = 0f
-            strokeWidth = 2
-            strokeColor = 0xFFE2E8F0.toInt()
-            setCardBackgroundColor(0xFFFFFFFF.toInt())
-            val params = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
-            params.bottomMargin = 16
-            layoutParams = params
-            setOnClickListener {
-                viewModel.selectAccount(account.id, "followers")
-                showSnapshotsScreen(account, "followers")
+        fun createCard(
+            emoji: String, title: String, subtitle: String, onClick: () -> Unit
+        ): com.google.android.material.card.MaterialCardView {
+            val card = com.google.android.material.card.MaterialCardView(this).apply {
+                radius = 24f; cardElevation = 0f
+                strokeWidth = 2; strokeColor = 0xFFE2E8F0.toInt()
+                setCardBackgroundColor(0xFFFFFFFF.toInt())
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT)
+                params.bottomMargin = 16; layoutParams = params
+                setOnClickListener { onClick() }
             }
-        }
-
-        val layoutFollowers = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(32, 28, 32, 28)
-        }
-        layoutFollowers.addView(TextView(this).apply {
-            text = "📥 Подписчики"
-            textSize = 20f
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(0xFF0F172A.toInt())
-        })
-        layoutFollowers.addView(TextView(this).apply {
-            text = "Кто подписан на @${account.username}"
-            textSize = 14f
-            setTextColor(0xFF64748B.toInt())
-            val p = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
-            p.topMargin = 4
-            layoutParams = p
-        })
-        cardFollowers.addView(layoutFollowers)
-
-        // Карточка подписок
-        val cardFollowing = com.google.android.material.card.MaterialCardView(this).apply {
-            radius = 24f
-            cardElevation = 0f
-            strokeWidth = 2
-            strokeColor = 0xFFE2E8F0.toInt()
-            setCardBackgroundColor(0xFFFFFFFF.toInt())
-            val params = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
-            params.bottomMargin = 16
-            layoutParams = params
-            setOnClickListener {
-                viewModel.selectAccount(account.id, "following")
-                showSnapshotsScreen(account, "following")
+            val inner = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(32, 28, 32, 28)
             }
+            inner.addView(TextView(this).apply {
+                text = "$emoji $title"; textSize = 20f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(0xFF0F172A.toInt())
+            })
+            inner.addView(TextView(this).apply {
+                text = subtitle; textSize = 14f
+                setTextColor(0xFF64748B.toInt())
+                val p = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT)
+                p.topMargin = 4; layoutParams = p
+            })
+            card.addView(inner)
+            return card
         }
 
-        val layoutFollowing = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(32, 28, 32, 28)
-        }
-        layoutFollowing.addView(TextView(this).apply {
-            text = "📤 Подписки"
-            textSize = 20f
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(0xFF0F172A.toInt())
+        layout.addView(createCard(
+            "📥", "Подписчики",
+            "Кто подписан на @${account.username}"
+        ) {
+            viewModel.selectAccount(account.id, "followers")
+            showSnapshotsScreen(account, "followers")
         })
-        layoutFollowing.addView(TextView(this).apply {
-            text = "На кого подписан @${account.username}"
-            textSize = 14f
-            setTextColor(0xFF64748B.toInt())
-            val p = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
-            p.topMargin = 4
-            layoutParams = p
-        })
-        cardFollowing.addView(layoutFollowing)
 
-        layout.addView(cardFollowers)
-        layout.addView(cardFollowing)
+        layout.addView(createCard(
+            "📤", "Подписки",
+            "На кого подписан @${account.username}"
+        ) {
+            viewModel.selectAccount(account.id, "following")
+            showSnapshotsScreen(account, "following")
+        })
+
+        layout.addView(createCard(
+            "🔀", "Не взаимные подписки",
+            "Фанаты и те, кто не подписан в ответ"
+        ) {
+            viewModel.selectAccount(account.id, "followers")
+            showNonMutualScreen(account)
+        })
+
         container.addView(layout)
     }
 
@@ -369,6 +340,22 @@ class MainActivity : AppCompatActivity() {
         }.attach()
     }
 
+    fun showNonMutualScreen(account: Account) {
+        currentScreen = "non_mutual"
+        binding.toolbar.title = "@${account.username}"
+        binding.toolbar.subtitle = "Не взаимные подписки"
+        binding.fabAdd.hide()
+        binding.tabLayout.visibility = View.GONE
+        binding.viewPager.visibility = View.GONE
+        binding.mainContainer.visibility = View.VISIBLE
+        binding.mainContainer.removeAllViews()
+
+        val fragment = NonMutualFragment.newInstance(account.id)
+        supportFragmentManager.beginTransaction()
+            .replace(binding.mainContainer.id, fragment)
+            .commit()
+    }
+
     // ══════════════════════════════════════
     // ДИАЛОГИ
     // ══════════════════════════════════════
@@ -378,14 +365,12 @@ class MainActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(48, 32, 48, 16)
         }
-
         val etUsername = com.google.android.material.textfield.TextInputLayout(this).apply {
             hint = "Имя пользователя"
             val params = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT)
-            params.bottomMargin = 16
-            layoutParams = params
+            params.bottomMargin = 16; layoutParams = params
         }
         val etUsernameInput = com.google.android.material.textfield.TextInputEditText(this)
         etUsername.addView(etUsernameInput)
@@ -453,6 +438,15 @@ class MainActivity : AppCompatActivity() {
                     ?: showAccountsList()
             }
             "choose_type" -> showAccountsList()
+            "non_mutual" -> {
+                // Удаляем фрагмент
+                val f = supportFragmentManager.findFragmentById(binding.mainContainer.id)
+                if (f != null) {
+                    supportFragmentManager.beginTransaction().remove(f).commit()
+                }
+                viewModel.currentAccount.value?.let { showChooseType(it) }
+                    ?: showAccountsList()
+            }
             else -> super.onBackPressed()
         }
     }
@@ -467,21 +461,17 @@ class SnapshotsListFragment : Fragment() {
         val layout = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
         }
-
         val emptyView = TextView(requireContext()).apply {
-            text = "📸 Пока нет снимков\n\nНажмите «Снимок», чтобы сохранить\nтекущий список подписчиков"
-            textSize = 15f
-            setTextColor(0xFF94A3B8.toInt())
+            text = "📸 Пока нет снимков\n\nНажмите «Снимок», чтобы сохранить\nтекущий список"
+            textSize = 15f; setTextColor(0xFF94A3B8.toInt())
             textAlignment = View.TEXT_ALIGNMENT_CENTER
-            setPadding(48, 160, 48, 48)
-            visibility = View.GONE
+            setPadding(48, 160, 48, 48); visibility = View.GONE
         }
         layout.addView(emptyView)
 
         val rv = RecyclerView(requireContext()).apply {
             layoutManager = LinearLayoutManager(context)
-            setPadding(0, 12, 0, 200)
-            clipToPadding = false
+            setPadding(0, 12, 0, 200); clipToPadding = false
         }
         layout.addView(rv)
 
@@ -493,7 +483,6 @@ class SnapshotsListFragment : Fragment() {
             emptyView.visibility = if (list.isNullOrEmpty()) View.VISIBLE else View.GONE
             rv.visibility = if (list.isNullOrEmpty()) View.GONE else View.VISIBLE
         }
-
         return layout
     }
 }
@@ -519,9 +508,171 @@ class ChangesFragment : Fragment() {
             val typeGone = if (vm.currentListType == "followers") "Отписались" else "Отписался от"
             b.tvSummary.text = "✅ $typeNew: ${r.newUsers.size}\n❌ $typeGone: ${r.goneUsers.size}"
             b.rvChanges.adapter = UsernameAdapter(
-                r.newUsers.map { UsernameItem(it, true) } +
-                r.goneUsers.map { UsernameItem(it, false) })
+                r.newUsers.map { UsernameItem(it, UsernameItem.NEW) } +
+                r.goneUsers.map { UsernameItem(it, UsernameItem.GONE) })
         }
+    }
+
+    override fun onDestroyView() { super.onDestroyView(); _b = null }
+}
+
+class NonMutualFragment : Fragment() {
+    private var _b: FragmentNonMutualBinding? = null
+    private val b get() = _b!!
+    private var currentFilter = "fans"
+
+    companion object {
+        private const val ARG_ACCOUNT_ID = "accountId"
+        fun newInstance(accountId: Long): NonMutualFragment {
+            val f = NonMutualFragment()
+            val args = Bundle()
+            args.putLong(ARG_ACCOUNT_ID, accountId)
+            f.arguments = args
+            return f
+        }
+    }
+
+    override fun onCreateView(inf: LayoutInflater, c: ViewGroup?, s: Bundle?): View {
+        _b = FragmentNonMutualBinding.inflate(inf, c, false); return b.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val vm = (requireActivity() as MainActivity).viewModel
+        val accountId = arguments?.getLong(ARG_ACCOUNT_ID) ?: return
+
+        b.rvNonMutual.layoutManager = LinearLayoutManager(requireContext())
+
+        // Запускаем вычисление
+        vm.computeNonMutual(accountId)
+
+        // Кнопки фильтра
+        b.btnShowFans.setOnClickListener {
+            currentFilter = "fans"
+            updateFilterButtons()
+            updateList(vm)
+        }
+        b.btnShowNotMutual.setOnClickListener {
+            currentFilter = "not_mutual"
+            updateFilterButtons()
+            updateList(vm)
+        }
+        b.btnShowAll.setOnClickListener {
+            currentFilter = "all"
+            updateFilterButtons()
+            updateList(vm)
+        }
+
+        vm.nonMutual.observe(viewLifecycleOwner) { result ->
+            if (result == null) {
+                b.tvSummaryTitle.text = "⚠️ Недостаточно данных"
+                b.tvSummaryDetails.text =
+                    "Для поиска не взаимных подписок нужны\n" +
+                    "снимки И подписчиков И подписок.\n\n" +
+                    "Вернитесь назад и соберите оба списка."
+                b.rvNonMutual.adapter = UsernameAdapter(emptyList())
+                b.btnShowFans.isEnabled = false
+                b.btnShowNotMutual.isEnabled = false
+                b.btnShowAll.isEnabled = false
+                return@observe
+            }
+
+            b.btnShowFans.isEnabled = true
+            b.btnShowNotMutual.isEnabled = true
+            b.btnShowAll.isEnabled = true
+
+            b.tvSummaryTitle.text = "🔀 Не взаимные подписки"
+            b.tvSummaryDetails.text =
+                "👤 Фанаты: ${result.fans.size}\n" +
+                "     подписаны, но не подписаны в ответ\n\n" +
+                "💔 Не взаимные: ${result.notFollowingBack.size}\n" +
+                "     подписан на них, но они не подписаны\n\n" +
+                "🤝 Взаимные: ${result.mutualCount}\n\n" +
+                "📊 Подписчиков: ${result.followersCount}  " +
+                "Подписок: ${result.followingCount}"
+
+            b.btnShowFans.text = "👤 Фанаты (${result.fans.size})"
+            b.btnShowNotMutual.text = "💔 Не вз. (${result.notFollowingBack.size})"
+            b.btnShowAll.text = "📋 Все (${result.fans.size + result.notFollowingBack.size})"
+
+            updateFilterButtons()
+            updateList(vm)
+        }
+    }
+
+    private fun updateFilterButtons() {
+        val active = 0xFF6366F1.toInt()
+        val white = 0xFFFFFFFF.toInt()
+
+        b.btnShowFans.apply {
+            if (currentFilter == "fans") {
+                setBackgroundColor(active); setTextColor(white)
+            } else {
+                setBackgroundColor(white); setTextColor(active)
+            }
+        }
+        b.btnShowNotMutual.apply {
+            if (currentFilter == "not_mutual") {
+                setBackgroundColor(active); setTextColor(white)
+            } else {
+                setBackgroundColor(white); setTextColor(active)
+            }
+        }
+        b.btnShowAll.apply {
+            if (currentFilter == "all") {
+                setBackgroundColor(active); setTextColor(white)
+            } else {
+                setBackgroundColor(white); setTextColor(active)
+            }
+        }
+    }
+
+    private fun updateList(vm: MainViewModel) {
+        val result = vm.nonMutual.value ?: return
+
+        val items = mutableListOf<UsernameItem>()
+
+        when (currentFilter) {
+            "fans" -> {
+                if (result.fans.isNotEmpty()) {
+                    items.add(UsernameItem(
+                        "👤 Фанаты — подписаны, но не подписаны в ответ",
+                        UsernameItem.HEADER))
+                    result.fans.forEach { items.add(UsernameItem(it, UsernameItem.FAN)) }
+                }
+            }
+            "not_mutual" -> {
+                if (result.notFollowingBack.isNotEmpty()) {
+                    items.add(UsernameItem(
+                        "💔 Подписан на них, но они не подписаны в ответ",
+                        UsernameItem.HEADER))
+                    result.notFollowingBack.forEach {
+                        items.add(UsernameItem(it, UsernameItem.NOT_MUTUAL))
+                    }
+                }
+            }
+            "all" -> {
+                if (result.fans.isNotEmpty()) {
+                    items.add(UsernameItem(
+                        "👤 Фанаты (${result.fans.size})",
+                        UsernameItem.HEADER))
+                    result.fans.forEach { items.add(UsernameItem(it, UsernameItem.FAN)) }
+                }
+                if (result.notFollowingBack.isNotEmpty()) {
+                    items.add(UsernameItem(
+                        "💔 Не взаимные (${result.notFollowingBack.size})",
+                        UsernameItem.HEADER))
+                    result.notFollowingBack.forEach {
+                        items.add(UsernameItem(it, UsernameItem.NOT_MUTUAL))
+                    }
+                }
+            }
+        }
+
+        if (items.isEmpty()) {
+            items.add(UsernameItem("Список пуст", UsernameItem.HEADER))
+        }
+
+        b.rvNonMutual.adapter = UsernameAdapter(items)
     }
 
     override fun onDestroyView() { super.onDestroyView(); _b = null }
