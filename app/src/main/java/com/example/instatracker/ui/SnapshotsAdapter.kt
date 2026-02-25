@@ -29,7 +29,7 @@ class SnapshotsAdapter(
         val item = getItem(position)
         holder.b.tvLabel.text = item.label
         holder.b.tvDate.text = fmt.format(Date(item.timestamp))
-        holder.b.tvCount.text = "${item.followerCount} подп."
+        holder.b.tvCount.text = "${item.count} чел."
         holder.b.btnDelete.setOnClickListener { onDelete(item) }
     }
 }
