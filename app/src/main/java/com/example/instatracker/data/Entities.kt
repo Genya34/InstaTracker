@@ -2,11 +2,20 @@ package com.example.instatracker.data
 
 import androidx.room.*
 
+@Entity(tableName = "accounts")
+data class Account(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val username: String,
+    val note: String = ""
+)
+
 @Entity(tableName = "snapshots")
 data class Snapshot(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val accountId: Long,
+    val listType: String,
     val timestamp: Long = System.currentTimeMillis(),
-    val followerCount: Int = 0,
+    val count: Int = 0,
     val label: String = ""
 )
 
@@ -27,8 +36,8 @@ data class Follower(
 )
 
 data class ChangeResult(
-    val newFollowers: List<String>,
-    val unfollowers: List<String>,
+    val newUsers: List<String>,
+    val goneUsers: List<String>,
     val oldSnapshot: Snapshot,
     val newSnapshot: Snapshot
 )
