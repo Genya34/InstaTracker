@@ -1,6 +1,9 @@
 package com.example.instatracker.ui
 
+import android.content.Intent
+import android.net.Uri
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.instatracker.databinding.ItemUsernameBinding
@@ -32,52 +35,71 @@ class UsernameAdapter(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = items[position]
+        val card = holder.b.root as? com.google.android.material.card.MaterialCardView
 
         if (item.type == UsernameItem.HEADER) {
             holder.b.tvIcon.text = ""
             holder.b.tvUsername.text = item.username
-            holder.b.tvUsername.setTextColor(0xFF64748B.toInt())
-            holder.b.tvUsername.textSize = 13f
-            holder.b.tvUsername.setTypeface(null, android.graphics.Typeface.BOLD)
-
-            val card = holder.b.root as? com.google.android.material.card.MaterialCardView
-            card?.setCardBackgroundColor(android.graphics.Color.TRANSPARENT)
+            holder.b.tvUsername.setTextColor(0xFF585068.toInt())
+            holder.b.tvUsername.textSize = 11f
+            holder.b.tvOpen.visibility = View.GONE
+            card?.setCardBackgroundColor(0x00000000)
             card?.strokeWidth = 0
-            card?.cardElevation = 0f
+            card?.isClickable = false
             return
         }
 
         holder.b.tvUsername.text = "@${item.username}"
-        holder.b.tvUsername.textSize = 15f
-        holder.b.tvUsername.setTypeface(null, android.graphics.Typeface.BOLD)
+        holder.b.tvUsername.textSize = 13f
+        holder.b.tvOpen.visibility = View.VISIBLE
 
-        val card = holder.b.root as? com.google.android.material.card.MaterialCardView
+        // Клик → открыть Instagram
+        holder.b.root.setOnClickListener {
+            val ctx = holder.b.root.context
+            try {
+                // Попробуем открыть в приложении Instagram
+                val igIntent = Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://instagram.com/_u/${item.username}"))
+                igIntent.setPackage("com.instagram.android")
+                ctx.startActivity(igIntent)
+            } catch (e: Exception) {
+                // Если Instagram не установлен — открыть в браузере
+                val webIntent = Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://instagram.com/${item.username}"))
+                ctx.startActivity(webIntent)
+            }
+        }
 
         when (item.type) {
             UsernameItem.NEW -> {
-                holder.b.tvIcon.text = "✅"
-                holder.b.tvUsername.setTextColor(0xFF065F46.toInt())
-                card?.setCardBackgroundColor(0xFFECFDF5.toInt())
+                holder.b.tvIcon.text = "+"
+                holder.b.tvUsername.setTextColor(0xFF185818.toInt())
+                card?.setCardBackgroundColor(0xFFD0F0D0.toInt())
+                card?.strokeColor = 0xFF90C890.toInt()
             }
             UsernameItem.GONE -> {
-                holder.b.tvIcon.text = "❌"
-                holder.b.tvUsername.setTextColor(0xFF991B1B.toInt())
-                card?.setCardBackgroundColor(0xFFFEF2F2.toInt())
+                holder.b.tvIcon.text = "X"
+                holder.b.tvUsername.setTextColor(0xFF781818.toInt())
+                card?.setCardBackgroundColor(0xFFF0D0D0.toInt())
+                card?.strokeColor = 0xFFC89090.toInt()
             }
             UsernameItem.FAN -> {
-                holder.b.tvIcon.text = "👤"
-                holder.b.tvUsername.setTextColor(0xFF1E40AF.toInt())
-                card?.setCardBackgroundColor(0xFFEFF6FF.toInt())
+                holder.b.tvIcon.text = "♦"
+                holder.b.tvUsername.setTextColor(0xFF182878.toInt())
+                card?.setCardBackgroundColor(0xFFD0D8F0.toInt())
+                card?.strokeColor = 0xFF9098C0.toInt()
             }
             UsernameItem.NOT_MUTUAL -> {
-                holder.b.tvIcon.text = "💔"
-                holder.b.tvUsername.setTextColor(0xFF9A3412.toInt())
-                card?.setCardBackgroundColor(0xFFFFF7ED.toInt())
+                holder.b.tvIcon.text = "♥"
+                holder.b.tvUsername.setTextColor(0xFF784018.toInt())
+                card?.setCardBackgroundColor(0xFFF0E0D0.toInt())
+                card?.strokeColor = 0xFFC0A888.toInt()
             }
             UsernameItem.MUTUAL -> {
-                holder.b.tvIcon.text = "🤝"
-                holder.b.tvUsername.setTextColor(0xFF065F46.toInt())
-                card?.setCardBackgroundColor(0xFFF0FDF4.toInt())
+                holder.b.tvIcon.text = "★"
+                holder.b.tvUsername.setTextColor(0xFF185828.toInt())
+                card?.setCardBackgroundColor(0xFFD0E8D0.toInt())
+                card?.strokeColor = 0xFF90B890.toInt()
             }
         }
     }
