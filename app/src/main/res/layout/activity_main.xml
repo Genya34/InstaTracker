@@ -15,25 +15,25 @@
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="60dp"
             android:background="@android:color/transparent"
-            app:title="InstaTracker"
-            app:subtitle="Отслеживаемые аккаунты"
+            app:title="INSTATRACKER"
+            app:subtitle="◆ TRACKED ACCOUNTS ◆"
             app:titleTextColor="@android:color/white"
-            app:subtitleTextColor="#C7D2FE"
+            app:subtitleTextColor="#A898D0"
             app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabLayout"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="@android:color/transparent"
+            android:layout_height="44dp"
+            android:background="@color/primary_dark"
             android:visibility="gone"
-            app:tabTextColor="#C7D2FE"
+            app:tabTextColor="#8070A8"
             app:tabSelectedTextColor="@android:color/white"
-            app:tabIndicatorColor="@android:color/white"
-            app:tabIndicatorHeight="3dp"
-            app:tabRippleColor="#4DFFFFFF" />
+            app:tabIndicatorColor="@color/snes_yellow"
+            app:tabIndicatorHeight="4dp"
+            app:tabRippleColor="#3DFFFFFF" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -56,11 +56,13 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="20dp"
-        android:text="Добавить"
+        android:text="+ ADD"
+        android:fontFamily="monospace"
         android:textColor="@android:color/white"
+        android:textStyle="bold"
         app:icon="@android:drawable/ic_input_add"
         app:iconTint="@android:color/white"
-        app:backgroundTint="@color/primary"
+        app:backgroundTint="@color/snes_green"
         app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Material3.FloatingActionButton" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
