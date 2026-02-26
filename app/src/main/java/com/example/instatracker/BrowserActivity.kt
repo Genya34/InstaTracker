@@ -57,6 +57,7 @@ class BrowserActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressBar)
         btnAutoScroll = findViewById(R.id.btnAutoScroll)
         btnCollect = findViewById(R.id.btnCollect)
+        findViewById<android.widget.ImageButton>(R.id.btnClose).setOnClickListener { finish() }
         webView = findViewById(R.id.webView)
 
         val typeText = if (listType == "followers") "подписчиков" else "подписок"
