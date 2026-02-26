@@ -139,7 +139,7 @@ class MainActivity : AppCompatActivity() {
         val emptyView = TextView(this).apply {
             text = "◆ WELCOME ◆\n\nTAP [+ ADD] TO START\nTRACKING AN ACCOUNT"
             textSize = 15f; setTextColor(0xFF887898.toInt())
-            textAlignment = View.TEXT_ALIGNMENT_CENTER; fontFamily
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
             setPadding(48, 200, 48, 48); visibility = View.GONE
             setTypeface(android.graphics.Typeface.MONOSPACE)
         }
