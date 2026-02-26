@@ -5,45 +5,54 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Subtle circle backdrop -->
-    <path
-        android:pathData="M54,22 a32,32 0,1,1 0,64 a32,32 0,1,1 0,-64"
+    <!-- Pixel grid background -->
+    <path android:pathData="M24,24 h60 v60 h-60 z"
         android:fillColor="#1AFFFFFF" />
 
-    <!-- Person head -->
-    <path
-        android:pathData="M54,30 a8,8 0,1,1 0,16 a8,8 0,1,1 0,-16"
+    <!-- Head (pixel block) -->
+    <path android:pathData="M49,26 h10 v10 h-10 z"
         android:fillColor="#FFFFFF" />
 
-    <!-- Person body -->
-    <path
-        android:pathData="M38,62 C38,53 44,49 54,49 C64,49 70,53 70,62 L69,67 C69,70 67,72 64,72 L44,72 C41,72 39,70 39,67 Z"
+    <!-- Body -->
+    <path android:pathData="M44,38 h20 v14 h-20 z"
         android:fillColor="#FFFFFF" />
 
-    <!-- Tracking indicator — white ring -->
-    <path
-        android:pathData="M73,25 a7,7 0,1,1 0,14 a7,7 0,1,1 0,-14"
-        android:fillColor="#FFFFFF" />
+    <!-- Left arm -->
+    <path android:pathData="M36,40 h8 v10 h-8 z"
+        android:fillColor="#E8E0D0" />
 
-    <!-- Tracking indicator — green dot -->
-    <path
-        android:pathData="M73,27 a5,5 0,1,1 0,10 a5,5 0,1,1 0,-10"
-        android:fillColor="#34D399" />
+    <!-- Right arm -->
+    <path android:pathData="M64,40 h8 v10 h-8 z"
+        android:fillColor="#E8E0D0" />
 
-    <!-- Small tracking arc around person -->
-    <path
-        android:pathData="M75,42 C81,50 81,62 75,70"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="2"
-        android:fillColor="#00000000"
-        android:strokeLineCap="round" />
+    <!-- Left leg -->
+    <path android:pathData="M46,52 h6 v14 h-6 z"
+        android:fillColor="#E8E0D0" />
 
-    <!-- Small tracking arc left side -->
-    <path
-        android:pathData="M33,70 C27,62 27,50 33,42"
-        android:strokeColor="#80FFFFFF"
-        android:strokeWidth="2"
-        android:fillColor="#00000000"
-        android:strokeLineCap="round" />
+    <!-- Right leg -->
+    <path android:pathData="M56,52 h6 v14 h-6 z"
+        android:fillColor="#E8E0D0" />
 
+    <!-- Tracking indicator outer (white border) -->
+    <path android:pathData="M66,22 h14 v3 h-14 z" android:fillColor="#FFFFFF" />
+    <path android:pathData="M66,33 h14 v3 h-14 z" android:fillColor="#FFFFFF" />
+    <path android:pathData="M66,22 h3 v14 h-3 z" android:fillColor="#FFFFFF" />
+    <path android:pathData="M77,22 h3 v14 h-3 z" android:fillColor="#FFFFFF" />
+
+    <!-- Tracking indicator inner (green) -->
+    <path android:pathData="M70,26 h6 v6 h-6 z"
+        android:fillColor="#38A858" />
+
+    <!-- Signal bars -->
+    <path android:pathData="M74,42 h3 v16 h-3 z"
+        android:fillColor="#80FFFFFF" />
+    <path android:pathData="M79,48 h3 v10 h-3 z"
+        android:fillColor="#50FFFFFF" />
+    <path android:pathData="M84,52 h3 v6 h-3 z"
+        android:fillColor="#30FFFFFF" />
+
+    <!-- Small pixel decorations -->
+    <path android:pathData="M28,30 h3 v3 h-3 z" android:fillColor="#20FFFFFF" />
+    <path android:pathData="M32,60 h3 v3 h-3 z" android:fillColor="#20FFFFFF" />
+    <path android:pathData="M76,62 h3 v3 h-3 z" android:fillColor="#20FFFFFF" />
 </vector>
