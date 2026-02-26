@@ -6,13 +6,12 @@
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- Top bar -->
     <LinearLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/gradient_toolbar"
+        android:background="@color/primary"
         android:padding="16dp"
         android:layout_alignParentTop="true">
 
@@ -20,61 +19,62 @@
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Загрузка..."
+            android:text="► LOADING..."
             android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace" />
 
         <TextView
             android:id="@+id/tvHint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Войдите в Instagram, если нужно"
-            android:textColor="#C7D2FE"
-            android:textSize="13sp"
+            android:text="LOGIN TO INSTAGRAM IF NEEDED"
+            android:textColor="#A898D0"
+            android:textSize="12sp"
+            android:fontFamily="monospace"
             android:layout_marginTop="4dp" />
     </LinearLayout>
 
-    <!-- Bottom bar -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/bottomBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        app:cardCornerRadius="20dp"
+        app:cardCornerRadius="4dp"
         app:cardElevation="8dp"
-        android:layout_margin="12dp"
+        android:layout_margin="8dp"
+        app:strokeWidth="3dp"
+        app:strokeColor="@color/primary_dark"
         app:cardBackgroundColor="@color/surface">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="12dp">
 
-            <!-- Progress text -->
             <TextView
                 android:id="@+id/tvProgress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Прокрутите список вниз или нажмите «Автопрокрутка»"
+                android:text="◆ SCROLL DOWN OR TAP AUTO-SCROLL ◆"
                 android:textColor="@color/text_secondary"
-                android:textSize="13sp"
+                android:textSize="11sp"
+                android:fontFamily="monospace"
                 android:textAlignment="center"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="10dp" />
 
-            <!-- Progress bar (hidden by default) -->
             <ProgressBar
                 android:id="@+id/progressBar"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
-                android:layout_height="6dp"
+                android:layout_height="8dp"
                 android:visibility="gone"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="10dp"
                 android:indeterminate="true"
-                android:indeterminateTint="@color/primary" />
+                android:indeterminateTint="@color/snes_yellow" />
 
-            <!-- Buttons row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -85,10 +85,12 @@
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:text="🔄 Автопрокрутка"
+                    android:text="► SCROLL"
                     android:textSize="13sp"
-                    android:layout_marginEnd="6dp"
-                    app:cornerRadius="14dp"
+                    android:fontFamily="monospace"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="4dp"
+                    app:cornerRadius="4dp"
                     app:backgroundTint="@color/primary"
                     android:textColor="@android:color/white" />
 
@@ -97,23 +99,22 @@
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:text="✅ Собрать"
+                    android:text="★ COLLECT"
                     android:textSize="13sp"
-                    android:layout_marginStart="6dp"
-                    app:cornerRadius="14dp"
-                    app:backgroundTint="@color/success"
+                    android:fontFamily="monospace"
+                    android:textStyle="bold"
+                    android:layout_marginStart="4dp"
+                    app:cornerRadius="4dp"
+                    app:backgroundTint="@color/snes_green"
                     android:textColor="@android:color/white" />
-
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- WebView -->
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/topBar"
         android:layout_above="@id/bottomBar" />
-
 </RelativeLayout>
