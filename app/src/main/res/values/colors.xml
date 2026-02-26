@@ -1,28 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#6366F1</color>
-    <color name="primary_dark">#4F46E5</color>
-    <color name="primary_light">#A5B4FC</color>
-    <color name="accent">#8B5CF6</color>
+    <!-- SNES Console Purple -->
+    <color name="primary">#5B4BA8</color>
+    <color name="primary_dark">#3C2E7C</color>
+    <color name="primary_light">#8878D0</color>
 
-    <color name="success">#10B981</color>
-    <color name="success_dark">#059669</color>
-    <color name="danger">#EF4444</color>
+    <!-- SNES Controller Buttons -->
+    <color name="snes_green">#38A858</color>
+    <color name="snes_red">#C83838</color>
+    <color name="snes_blue">#3868B8</color>
+    <color name="snes_yellow">#C8A828</color>
 
-    <color name="background">#F1F5F9</color>
-    <color name="surface">#FFFFFF</color>
-    <color name="surface_variant">#F8FAFC</color>
+    <color name="success">#38A858</color>
+    <color name="danger">#C83838</color>
 
-    <color name="text_primary">#0F172A</color>
-    <color name="text_secondary">#64748B</color>
-    <color name="text_hint">#94A3B8</color>
-    <color name="divider">#E2E8F0</color>
+    <!-- Retro Cream (aged SNES plastic) -->
+    <color name="background">#D0C8B8</color>
+    <color name="surface">#E8E0D0</color>
+    <color name="surface_variant">#F0EAE0</color>
 
-    <color name="gradient_start">#6366F1</color>
-    <color name="gradient_end">#8B5CF6</color>
+    <color name="text_primary">#181830</color>
+    <color name="text_secondary">#585068</color>
+    <color name="text_hint">#887898</color>
+    <color name="divider">#B0A890</color>
 
-    <color name="card_new">#ECFDF5</color>
-    <color name="card_gone">#FEF2F2</color>
-    <color name="text_new">#065F46</color>
-    <color name="text_gone">#991B1B</color>
+    <color name="card_new">#D0F0D0</color>
+    <color name="card_gone">#F0D0D0</color>
+    <color name="card_fan">#D0D8F0</color>
+    <color name="card_not_mutual">#F0E0D0</color>
+    <color name="card_mutual">#D0E8D0</color>
+
+    <color name="text_new">#185818</color>
+    <color name="text_gone">#781818</color>
+    <color name="text_fan">#182878</color>
+    <color name="text_not_mutual">#784018</color>
+    <color name="text_mutual">#185828</color>
 </resources>
