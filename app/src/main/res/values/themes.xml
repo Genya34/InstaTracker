@@ -3,9 +3,10 @@
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/primary_dark</item>
         <item name="colorOnPrimary">@android:color/white</item>
-        <item name="colorSecondary">@color/accent</item>
+        <item name="colorSecondary">@color/snes_green</item>
         <item name="android:colorBackground">@color/background</item>
         <item name="android:statusBarColor">@color/primary_dark</item>
-        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:navigationBarColor">@color/primary_dark</item>
+        <item name="android:fontFamily">monospace</item>
     </style>
 </resources>
