@@ -32,18 +32,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val clean = username.trim().removePrefix("@").lowercase()
             if (clean.isBlank()) {
-                _status.value = "Введите имя пользователя"
-                return@launch
+                _status.value = "ENTER USERNAME"; return@launch
             }
             dao.insertAccount(Account(username = clean, note = note))
-            _status.value = "Аккаунт @$clean добавлен"
+            _status.value = "► @$clean ADDED"
         }
     }
 
     fun deleteAccount(account: Account) {
         viewModelScope.launch {
             dao.deleteAccount(account)
-            _status.value = "Аккаунт удалён"
+            _status.value = "► ACCOUNT DELETED"
         }
     }
 
@@ -70,21 +69,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 .filter { it.isNotBlank() }.distinct()
 
             if (clean.isEmpty()) {
-                _status.value = "Список пуст"
-                return@launch
+                _status.value = "LIST IS EMPTY"; return@launch
             }
 
-            val typeLabel = if (currentListType == "followers") "подписчиков" else "подписок"
-
+            val typeLabel = if (currentListType == "followers") "FOLLOWERS" else "FOLLOWING"
             val snapshot = Snapshot(
                 accountId = currentAccountId,
                 listType = currentListType,
                 count = clean.size,
-                label = label.ifBlank { "Снимок $typeLabel (${clean.size})" }
+                label = label.ifBlank { "$typeLabel SNAPSHOT (${clean.size})" }
             )
             val id = dao.insertSnapshot(snapshot)
             dao.insertFollowers(clean.map { Follower(snapshotId = id, username = it) })
-            _status.value = "Сохранено: ${clean.size}"
+            _status.value = "► SAVED: ${clean.size}"
             loadSnapshots()
         }
     }
@@ -92,17 +89,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun compareLastTwo() {
         viewModelScope.launch {
             val last = dao.getLastTwoSnapshots(currentAccountId, currentListType)
-            if (last.size < 2) {
-                _changes.value = null
-                return@launch
-            }
+            if (last.size < 2) { _changes.value = null; return@launch }
             val oldSet = dao.getFollowerUsernames(last[1].id).toSet()
             val newSet = dao.getFollowerUsernames(last[0].id).toSet()
             _changes.value = ChangeResult(
                 newUsers = (newSet - oldSet).sorted(),
                 goneUsers = (oldSet - newSet).sorted(),
-                oldSnapshot = last[1],
-                newSnapshot = last[0]
+                oldSnapshot = last[1], newSnapshot = last[0]
             )
         }
     }
@@ -112,35 +105,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val followersSnap = dao.getLatestSnapshot(accountId, "followers")
             val followingSnap = dao.getLatestSnapshot(accountId, "following")
 
-            if (followersSnap == null && followingSnap == null) {
+            if (followersSnap == null || followingSnap == null) {
                 _nonMutual.value = null
-                _status.value = "Сначала соберите подписчиков и подписки"
-                return@launch
-            }
-
-            if (followersSnap == null) {
-                _nonMutual.value = null
-                _status.value = "Нет снимка подписчиков. Сначала соберите подписчиков."
-                return@launch
-            }
-
-            if (followingSnap == null) {
-                _nonMutual.value = null
-                _status.value = "Нет снимка подписок. Сначала соберите подписки."
+                _status.value = if (followersSnap == null)
+                    "► COLLECT FOLLOWERS FIRST" else "► COLLECT FOLLOWING FIRST"
                 return@launch
             }
 
             val followers = dao.getFollowerUsernames(followersSnap.id).toSet()
             val following = dao.getFollowerUsernames(followingSnap.id).toSet()
 
-            val mutual = followers.intersect(following)
-            val fans = (followers - following).sorted()
-            val notFollowingBack = (following - followers).sorted()
-
             _nonMutual.value = NonMutualResult(
-                fans = fans,
-                notFollowingBack = notFollowingBack,
-                mutualCount = mutual.size,
+                fans = (followers - following).sorted(),
+                notFollowingBack = (following - followers).sorted(),
+                mutual = followers.intersect(following).sorted().toList(),
                 followersCount = followers.size,
                 followingCount = following.size
             )
@@ -150,7 +128,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteSnapshot(s: Snapshot) {
         viewModelScope.launch {
             dao.deleteSnapshot(s)
-            _status.value = "Удалено"
+            _status.value = "► DELETED"
             loadSnapshots()
         }
     }
