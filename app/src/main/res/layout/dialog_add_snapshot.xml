@@ -10,73 +10,73 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="📸 Новый снимок"
-        android:textSize="22sp"
+        android:text="◆ NEW SNAPSHOT ◆"
+        android:textSize="20sp"
         android:textStyle="bold"
+        android:fontFamily="monospace"
         android:textColor="@color/text_primary"
         android:layout_marginBottom="16dp" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnBrowser"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:text="🌐  Получить автоматически"
+        android:layout_height="52dp"
+        android:text="► AUTO-COLLECT"
         android:textSize="15sp"
+        android:fontFamily="monospace"
+        android:textStyle="bold"
         android:textColor="@android:color/white"
-        app:backgroundTint="@color/success"
-        app:cornerRadius="16dp"
-        app:elevation="0dp" />
+        app:backgroundTint="@color/snes_green"
+        app:cornerRadius="4dp" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Откроется встроенный браузер с автопрокруткой"
-        android:textSize="12sp"
+        android:text="OPENS BUILT-IN BROWSER WITH AUTO-SCROLL"
+        android:textSize="10sp"
+        android:fontFamily="monospace"
         android:textColor="@color/text_hint"
         android:textAlignment="center"
         android:layout_marginTop="4dp"
-        android:layout_marginBottom="20dp" />
+        android:layout_marginBottom="16dp" />
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="3dp"
         android:background="@color/divider" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="или введите вручную"
-        android:textSize="13sp"
+        android:text="─── OR ENTER MANUALLY ───"
+        android:textSize="11sp"
+        android:fontFamily="monospace"
         android:textColor="@color/text_hint"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:layout_marginBottom="12dp" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Название снимка"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        app:boxCornerRadiusTopStart="14dp"
-        app:boxCornerRadiusTopEnd="14dp"
-        app:boxCornerRadiusBottomStart="14dp"
-        app:boxCornerRadiusBottomEnd="14dp"
-        android:layout_marginBottom="12dp">
+        android:hint="LABEL"
+        android:layout_marginBottom="8dp">
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etLabel"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <EditText
         android:id="@+id/etUsernames"
         android:layout_width="match_parent"
-        android:layout_height="140dp"
+        android:layout_height="130dp"
         android:gravity="top"
         android:inputType="textMultiLine"
         android:background="@drawable/edit_text_bg"
-        android:padding="14dp"
+        android:padding="12dp"
         android:fontFamily="monospace"
-        android:textSize="14sp"
+        android:textSize="13sp"
         android:textColor="@color/text_primary"
         android:hint="user1\nuser2\nuser3"
         android:textColorHint="@color/text_hint" />
@@ -84,20 +84,20 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnImportJson"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="12dp"
-        android:text="📂  Импорт из JSON"
+        android:layout_height="44dp"
+        android:layout_marginTop="8dp"
+        android:text="▣ IMPORT JSON"
+        android:fontFamily="monospace"
         android:textColor="@color/primary"
-        app:cornerRadius="14dp"
+        app:cornerRadius="4dp"
         style="@style/Widget.Material3.Button.OutlinedButton" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnInstruction"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="4dp"
-        android:text="📖  Подробная инструкция"
+        android:layout_height="44dp"
+        android:text="? HELP"
+        android:fontFamily="monospace"
         android:textColor="@color/text_secondary"
         style="@style/Widget.Material3.Button.TextButton" />
-
 </LinearLayout>
