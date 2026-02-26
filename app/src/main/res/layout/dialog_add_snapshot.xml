@@ -96,7 +96,7 @@
         android:id="@+id/btnInstruction"
         android:layout_width="match_parent"
         android:layout_height="44dp"
-        android:text="? HELP"
+        android:text="▸ HELP"
         android:fontFamily="monospace"
         android:textColor="@color/text_secondary"
         style="@style/Widget.Material3.Button.TextButton" />
