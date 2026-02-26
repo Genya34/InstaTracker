@@ -6,61 +6,62 @@
     android:orientation="vertical"
     android:background="@color/background">
 
-    <!-- Summary card -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        app:cardCornerRadius="20dp"
+        android:layout_margin="12dp"
+        app:cardCornerRadius="4dp"
         app:cardElevation="0dp"
-        app:strokeWidth="1dp"
-        app:strokeColor="@color/divider"
+        app:strokeWidth="3dp"
+        app:strokeColor="@color/primary_dark"
         app:cardBackgroundColor="@color/surface">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="16dp">
 
             <TextView
                 android:id="@+id/tvSummaryTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
+                android:fontFamily="monospace"
                 android:textColor="@color/text_primary" />
 
             <TextView
                 android:id="@+id/tvSummaryDetails"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
+                android:textSize="13sp"
+                android:fontFamily="monospace"
                 android:textColor="@color/text_secondary"
-                android:lineSpacingExtra="6dp"
-                android:layout_marginTop="12dp" />
-
+                android:lineSpacingExtra="4dp"
+                android:layout_marginTop="8dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Filter buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
-        android:layout_marginBottom="8dp">
+        android:paddingHorizontal="12dp"
+        android:layout_marginBottom="4dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnShowFans"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="👤 Фанаты"
-            android:textSize="12sp"
-            android:layout_marginEnd="4dp"
-            app:cornerRadius="12dp"
-            app:backgroundTint="@color/primary"
+            android:text="FANS"
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:textStyle="bold"
+            android:layout_marginEnd="3dp"
+            app:cornerRadius="4dp"
+            app:backgroundTint="@color/snes_blue"
             android:textColor="@android:color/white" />
 
         <com.google.android.material.button.MaterialButton
@@ -68,31 +69,48 @@
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="💔 Не взаимные"
-            android:textSize="12sp"
-            android:layout_marginHorizontal="4dp"
-            app:cornerRadius="12dp"
-            style="@style/Widget.Material3.Button.OutlinedButton" />
+            android:text="NOT MUT."
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:textStyle="bold"
+            android:layout_marginHorizontal="3dp"
+            app:cornerRadius="4dp"
+            app:backgroundTint="@color/snes_red"
+            android:textColor="@android:color/white" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnShowMutual"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="MUTUAL"
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:textStyle="bold"
+            android:layout_marginHorizontal="3dp"
+            app:cornerRadius="4dp"
+            app:backgroundTint="@color/snes_green"
+            android:textColor="@android:color/white" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnShowAll"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="📋 Все"
-            android:textSize="12sp"
-            android:layout_marginStart="4dp"
-            app:cornerRadius="12dp"
-            style="@style/Widget.Material3.Button.OutlinedButton" />
-
+            android:text="ALL"
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:textStyle="bold"
+            android:layout_marginStart="3dp"
+            app:cornerRadius="4dp"
+            app:backgroundTint="@color/snes_yellow"
+            android:textColor="@color/text_primary" />
     </LinearLayout>
 
-    <!-- List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvNonMutual"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingBottom="100dp" />
-
 </LinearLayout>
