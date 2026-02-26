@@ -45,7 +45,7 @@ data class ChangeResult(
 data class NonMutualResult(
     val fans: List<String>,
     val notFollowingBack: List<String>,
-    val mutualCount: Int,
+    val mutual: List<String>,
     val followersCount: Int,
     val followingCount: Int
 )
