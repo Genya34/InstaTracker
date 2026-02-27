@@ -30,7 +30,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: MainViewModel
 
-    private var currentScreen = "accounts"
+    // Теперь экран — это enum, а не строка. Опечатка не скомпилируется.
+    private var currentScreen = Screen.ACCOUNTS
     private var pendingLabel = ""
 
     private val jsonPicker = registerForActivityResult(
@@ -77,7 +78,7 @@ class MainActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(
             this,
-            MainViewModelFactory(application)
+            MainViewModelFactory.getInstance(application)
         )[MainViewModel::class.java]
 
         binding.toolbar.menu.add(getString(R.string.btn_help)).apply {
@@ -95,18 +96,25 @@ class MainActivity : AppCompatActivity() {
 
         binding.fabAdd.setOnClickListener {
             when (currentScreen) {
-                "accounts" -> showAddAccountDialog()
-                "snapshots" -> showAddSnapshotDialog()
+                Screen.ACCOUNTS -> showAddAccountDialog()
+                Screen.SNAPSHOTS -> showAddSnapshotDialog()
+                else -> { }
             }
         }
 
+        // Обычные статусные сообщения
         viewModel.status.observe(this) { message ->
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        }
+
+        // Ошибки показываем отдельно — можно будет легко поменять на диалог
+        viewModel.error.observe(this) { message ->
+            Toast.makeText(this, "⚠️ $message", Toast.LENGTH_LONG).show()
         }
     }
 
     private fun updateBackArrow() {
-        if (currentScreen == "accounts") {
+        if (currentScreen == Screen.ACCOUNTS) {
             binding.toolbar.navigationIcon = null
         } else {
             binding.toolbar.setNavigationIcon(R.drawable.ic_pixel_back)
@@ -115,19 +123,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleBack() {
         when (currentScreen) {
-            "snapshots" -> viewModel.currentAccount.value?.let { showChooseType(it) } ?: showAccountsList()
-            "choose_type" -> showAccountsList()
-            "stats" -> {
+            Screen.SNAPSHOTS -> viewModel.currentAccount.value?.let { showChooseType(it) } ?: showAccountsList()
+            Screen.CHOOSE_TYPE -> showAccountsList()
+            Screen.STATS -> {
                 val f = supportFragmentManager.findFragmentById(binding.mainContainer.id)
                 if (f != null) supportFragmentManager.beginTransaction().remove(f).commit()
                 viewModel.currentAccount.value?.let { showChooseType(it) } ?: showAccountsList()
             }
-            else -> finish()
+            Screen.ACCOUNTS -> finish()
         }
     }
 
     private fun showAccountsList() {
-        currentScreen = "accounts"
+        currentScreen = Screen.ACCOUNTS
         binding.toolbar.title = getString(R.string.toolbar_title)
         binding.toolbar.subtitle = getString(R.string.toolbar_subtitle_accounts)
         binding.tabLayout.visibility = View.GONE
@@ -180,7 +188,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showChooseType(account: Account) {
-        currentScreen = "choose_type"
+        currentScreen = Screen.CHOOSE_TYPE
         binding.toolbar.title = "@${account.username}"
         binding.toolbar.subtitle = getString(R.string.toolbar_subtitle_select_mode)
         binding.fabAdd.hide()
@@ -212,7 +220,6 @@ class MainActivity : AppCompatActivity() {
         makeCard("★", getString(R.string.mode_statistics),
             getString(R.string.mode_statistics_sub),
             getColor(R.color.colorStatistics), layout) {
-            viewModel.selectAccount(account.id, "followers")
             showStatsScreen(account)
         }
 
@@ -255,7 +262,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun showSnapshotsScreen(account: Account, listType: String) {
-        currentScreen = "snapshots"
+        currentScreen = Screen.SNAPSHOTS
         binding.toolbar.title = "@${account.username}"
         binding.toolbar.subtitle = if (listType == "followers")
             getString(R.string.toolbar_subtitle_followers)
@@ -279,7 +286,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showStatsScreen(account: Account) {
-        currentScreen = "stats"
+        currentScreen = Screen.STATS
         binding.toolbar.title = "@${account.username}"
         binding.toolbar.subtitle = getString(R.string.toolbar_subtitle_statistics)
         binding.fabAdd.hide()
