@@ -1,0 +1,127 @@
+<resources>
+    <string name="app_name">InstaTracker</string>
+
+    <!-- Toolbar -->
+    <string name="toolbar_title">INSTATRACKER</string>
+    <string name="toolbar_subtitle_accounts">◆ ОТСЛЕЖИВАЕМЫЕ АККАУНТЫ ◆</string>
+    <string name="toolbar_subtitle_select_mode">◆ ВЫБЕРИТЕ РЕЖИМ ◆</string>
+    <string name="toolbar_subtitle_followers">◆ ПОДПИСЧИКИ ◆</string>
+    <string name="toolbar_subtitle_following">◆ ПОДПИСКИ ◆</string>
+    <string name="toolbar_subtitle_statistics">◆ СТАТИСТИКА ◆</string>
+
+    <!-- Кнопки -->
+    <string name="btn_add">+ ДОБАВИТЬ</string>
+    <string name="btn_snap">+ СНИМОК</string>
+    <string name="btn_save">СОХРАНИТЬ</string>
+    <string name="btn_cancel">ОТМЕНА</string>
+    <string name="btn_delete">УДАЛИТЬ</string>
+    <string name="btn_ok">ОК</string>
+    <string name="btn_help">Помощь</string>
+    <string name="btn_browser">🌐 Браузер</string>
+    <string name="btn_import_json">📂 JSON</string>
+    <string name="btn_instruction">❓ Инструкция</string>
+    <string name="btn_auto_scroll">🔄 Автопрокрутка</string>
+    <string name="btn_stop_scroll">⏹ Остановить</string>
+    <string name="btn_collect">📋 Собрать</string>
+    <string name="btn_scroll_more">🔄 Прокрутить ещё</string>
+
+    <!-- Вкладки -->
+    <string name="tab_snapshots">СНИМКИ</string>
+    <string name="tab_changes">ИЗМЕНЕНИЯ</string>
+
+    <!-- Экран аккаунтов -->
+    <string name="welcome_empty">◆ ДОБРО ПОЖАЛОВАТЬ ◆\n\nНАЖМИТЕ [+ ДОБАВИТЬ]\nЧТОБЫ НАЧАТЬ ОТСЛЕЖИВАНИЕ</string>
+    <string name="hint_tap_to_view">Нажмите для просмотра</string>
+    <string name="icon_account">👤</string>
+
+    <!-- Режимы -->
+    <string name="mode_followers">ПОДПИСЧИКИ</string>
+    <string name="mode_following">ПОДПИСКИ</string>
+    <string name="mode_followers_sub">КТО ПОДПИСАН НА @%1$s</string>
+    <string name="mode_following_sub">НА КОГО ПОДПИСАН @%1$s</string>
+    <string name="mode_statistics">СТАТИСТИКА</string>
+    <string name="mode_statistics_sub">ФАНАТЫ / НЕ ВЗАИМНО / ВЗАИМНО</string>
+
+    <!-- Диалог добавления аккаунта -->
+    <string name="dialog_add_account_title">◆ ДОБАВИТЬ АККАУНТ ◆</string>
+    <string name="hint_username">ИМЯПОЛЬЗОВАТЕЛЯ</string>
+    <string name="hint_note">ЗАМЕТКА (НЕОБЯЗАТЕЛЬНО)</string>
+
+    <!-- Диалог удаления аккаунта -->
+    <string name="dialog_delete_title">УДАЛИТЬ @%1$s?</string>
+    <string name="dialog_delete_message">Все снимки будут удалены</string>
+
+    <!-- Снимки -->
+    <string name="snapshots_empty">◆ СНИМКОВ ЕЩЁ НЕТ ◆\n\nНАЖМИТЕ [+ СНИМОК] ЧТОБЫ\nСОХРАНИТЬ ТЕКУЩИЙ СПИСОК</string>
+    <string name="snapshot_count">%1$d чел.</string>
+    <string name="snapshot_label_followers">ПОДПИСЧИКИ СНИМОК (%1$d)</string>
+    <string name="snapshot_label_following">ПОДПИСКИ СНИМОК (%1$d)</string>
+    <string name="snapshot_label_auto_followers">АВТО ПОДПИСЧИКИ (%1$d)</string>
+    <string name="snapshot_label_auto_following">АВТО ПОДПИСКИ (%1$d)</string>
+
+    <!-- Изменения -->
+    <string name="changes_not_enough">◆ ДОБАВЬТЕ 2+ СНИМКА\n  ЧТОБЫ УВИДЕТЬ ИЗМЕНЕНИЯ ◆</string>
+    <string name="changes_new_followers">НОВЫЕ ПОДПИСЧИКИ</string>
+    <string name="changes_gone_followers">ОТПИСАЛИСЬ</string>
+    <string name="changes_new_following">НОВЫЕ ПОДПИСКИ</string>
+    <string name="changes_gone_following">УБРАЛ ИЗ ПОДПИСОК</string>
+    <string name="changes_summary">+ %1$s: %2$d\nX %3$s: %4$d</string>
+
+    <!-- Статистика -->
+    <string name="stats_title">★ СТАТИСТИКА ★</string>
+    <string name="stats_not_enough_title">◆ НЕДОСТАТОЧНО ДАННЫХ ◆</string>
+    <string name="stats_not_enough_message">СНАЧАЛА СОБЕРИТЕ\nПОДПИСЧИКОВ И ПОДПИСКИ</string>
+    <string name="stats_details">♦ ФАНАТЫ: %1$d\n♥ НЕ ВЗАИМНО: %2$d\n★ ВЗАИМНО: %3$d\n─────────────────\nПОДПИСЧИКИ: %4$d\nПОДПИСКИ: %5$d</string>
+    <string name="btn_fans">♦%1$d</string>
+    <string name="btn_not_mutual">♥%1$d</string>
+    <string name="btn_mutual">★%1$d</string>
+    <string name="btn_all">ВСЕ</string>
+    <string name="header_fans">♦ ФАНАТЫ — ПОДПИСАНЫ НА ВАС, ВЫ НЕТ</string>
+    <string name="header_not_mutual">♥ ВЫ ПОДПИСАНЫ, ОНИ НЕТ</string>
+    <string name="header_mutual">★ ВЗАИМНЫЕ — ПОДПИСАНЫ ДРУГ НА ДРУГА (%1$d)</string>
+    <string name="no_fans">◆ НЕТ ФАНАТОВ ◆</string>
+    <string name="no_not_mutual">◆ ВСЕ ВЗАИМНЫ ◆</string>
+    <string name="no_mutual">◆ НЕТ ВЗАИМНЫХ ◆</string>
+
+    <!-- Статусные сообщения (Toast) -->
+    <string name="status_enter_username">ВВЕДИТЕ ИМЯ ПОЛЬЗОВАТЕЛЯ</string>
+    <string name="status_account_added">► @%1$s ДОБАВЛЕН</string>
+    <string name="status_account_deleted">► АККАУНТ УДАЛЁН</string>
+    <string name="status_list_empty">СПИСОК ПУСТ</string>
+    <string name="status_saved">► СОХРАНЕНО: %1$d</string>
+    <string name="status_deleted">► УДАЛЕНО</string>
+    <string name="status_collect_followers_first">► СНАЧАЛА СОБЕРИТЕ ПОДПИСЧИКОВ</string>
+    <string name="status_collect_following_first">► СНАЧАЛА СОБЕРИТЕ ПОДПИСКИ</string>
+    <string name="status_enter_usernames">ВВЕДИТЕ ИМЕНА ПОЛЬЗОВАТЕЛЕЙ</string>
+    <string name="status_error">ОШИБКА: %1$s</string>
+
+    <!-- Браузер -->
+    <string name="browser_title_collecting">Сбор %1$s @%2$s</string>
+    <string name="browser_loading">Загрузка…</string>
+    <string name="browser_hint_login">⚠️ Войдите в свой аккаунт Instagram</string>
+    <string name="browser_hint_ready">Нажмите «Автопрокрутка» или прокрутите вручную</string>
+    <string name="browser_scrolling">⏳ Прокрутка… найдено ~%1$d пользователей</string>
+    <string name="browser_scroll_start">⏳ Начинаю прокрутку…</string>
+    <string name="browser_scroll_stopped">Прокрутка остановлена</string>
+    <string name="browser_scroll_done_collect">✅ Прокрутка завершена! Найдено ~%1$d. Собираю…</string>
+    <string name="browser_scroll_done">✅ Найдено ~%1$d пользователей. Нажмите «Собрать»</string>
+    <string name="browser_collecting">⏳ Собираю имена…</string>
+    <string name="browser_found">✅ Найдено: %1$d пользователей</string>
+    <string name="browser_not_found_progress">❌ Не удалось найти имена</string>
+    <string name="browser_not_found_title">Ничего не найдено</string>
+    <string name="browser_not_found_message">Возможные причины:\n\n• Вы не вошли в Instagram\n• Список ещё не загрузился\n• Профиль закрытый\n\nПопробуйте войти в аккаунт и нажать «Автопрокрутка» снова</string>
+    <string name="browser_result_title">✅ Найдено: %1$d</string>
+    <string name="browser_result_more">… и ещё %1$d</string>
+    <string name="browser_type_followers">подписчиков</string>
+    <string name="browser_type_following">подписок</string>
+    <string name="browser_error">Ошибка: %1$s</string>
+
+    <!-- Помощь -->
+    <string name="help_title">◆ ПОМОЩЬ ◆</string>
+    <string name="help_divider">═══════════════════════</string>
+    <string name="help_auto_title">► АВТО-СБОР</string>
+    <string name="help_auto_body">1. ВЫБЕРИТЕ АККАУНТ → ПОДПИСЧИКИ\n   ИЛИ ПОДПИСКИ\n2. НАЖМИТЕ [+ СНИМОК] → АВТО-СБОР\n3. ВОЙДИТЕ В INSTAGRAM (ПЕРВЫЙ РАЗ)\n4. НАЖМИТЕ [► ПРОКРУТКА] — АВТО!\n5. ИМЕНА СОБРАНЫ → СОХРАНИТЬ</string>
+    <string name="help_stats_title">★ СТАТИСТИКА</string>
+    <string name="help_stats_body">1. СОБЕРИТЕ ПОДПИСЧИКОВ\n   И ПОДПИСКИ\n2. НАЖМИТЕ СТАТИСТИКА\n3. СМОТРИТЕ:\n   ♦ ФАНАТЫ — ПОДПИСАНЫ НА ВАС,\n     ВЫ НЕТ\n   ♥ НЕ ВЗАИМНО — ВЫ ПОДПИСАНЫ,\n     ОНИ НЕТ\n   ★ ВЗАИМНО — ПОДПИСАНЫ ДРУГ\n     НА ДРУГА</string>
+    <string name="help_tip">НАЖМИТЕ НА ИМЯ ПОЛЬЗОВАТЕЛЯ\nЧТОБЫ ОТКРЫТЬ ПРОФИЛЬ В INSTAGRAM</string>
+</resources>
