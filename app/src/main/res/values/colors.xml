@@ -10,6 +10,8 @@
     <color name="primary_dark">#3D3080</color>
     <color name="snes_green">#38A858</color>
     <color name="snes_yellow">#C8A828</color>
+    <color name="snes_blue">#3868B8</color>
+    <color name="snes_red">#EF4444</color>
     <color name="surface">#F5F0E8</color>
     <color name="surface_variant">#E8E0D0</color>
     <color name="text_primary">#181830</color>
