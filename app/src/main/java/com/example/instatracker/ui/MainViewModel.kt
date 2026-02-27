@@ -5,19 +5,44 @@ import androidx.lifecycle.*
 import com.example.instatracker.data.*
 import kotlinx.coroutines.launch
 
+data class AccountSelection(val accountId: Long, val listType: String)
+
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val dao = AppDatabase.getInstance(application).followerDao()
 
     val accounts: LiveData<List<Account>> = dao.getAllAccounts()
 
-    var currentAccountId: Long = 0
-    var currentListType: String = "followers"
+    private val _selection = MutableLiveData<AccountSelection>()
 
-    private val _snapshots = MutableLiveData<List<Snapshot>>()
-    val snapshots: LiveData<List<Snapshot>> = _snapshots
+    val currentListType: String get() = _selection.value?.listType ?: "followers"
 
-    private val _changes = MutableLiveData<ChangeResult?>()
-    val changes: LiveData<ChangeResult?> = _changes
+    private val _currentAccount = MutableLiveData<Account?>()
+    val currentAccount: LiveData<Account?> = _currentAccount
+
+    // Снимки автоматически обновляются при смене selection — без observeForever!
+    val snapshots: LiveData<List<Snapshot>> = _selection.switchMap { sel ->
+        dao.getSnapshots(sel.accountId, sel.listType)
+    }
+
+    // Изменения автоматически пересчитываются при смене списка снимков
+    val changes: LiveData<ChangeResult?> = snapshots.switchMap { list ->
+        liveData {
+            if (list.size < 2) {
+                emit(null)
+            } else {
+                val oldSet = dao.getFollowerUsernames(list[1].id).toSet()
+                val newSet = dao.getFollowerUsernames(list[0].id).toSet()
+                emit(
+                    ChangeResult(
+                        newUsers = (newSet - oldSet).sorted(),
+                        goneUsers = (oldSet - newSet).sorted(),
+                        oldSnapshot = list[1],
+                        newSnapshot = list[0]
+                    )
+                )
+            }
+        }
+    }
 
     private val _nonMutual = MutableLiveData<NonMutualResult?>()
     val nonMutual: LiveData<NonMutualResult?> = _nonMutual
@@ -25,78 +50,62 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _status = MutableLiveData<String>()
     val status: LiveData<String> = _status
 
-    private val _currentAccount = MutableLiveData<Account?>()
-    val currentAccount: LiveData<Account?> = _currentAccount
-
     fun addAccount(username: String, note: String = "") {
         viewModelScope.launch {
             val clean = username.trim().removePrefix("@").lowercase()
             if (clean.isBlank()) {
-                _status.value = "ENTER USERNAME"; return@launch
+                _status.value = "ВВЕДИТЕ ИМЯ ПОЛЬЗОВАТЕЛЯ"
+                return@launch
             }
             dao.insertAccount(Account(username = clean, note = note))
-            _status.value = "► @$clean ADDED"
+            _status.value = "► @$clean ДОБАВЛЕН"
         }
     }
 
     fun deleteAccount(account: Account) {
         viewModelScope.launch {
             dao.deleteAccount(account)
-            _status.value = "► ACCOUNT DELETED"
+            _status.value = "► АККАУНТ УДАЛЁН"
         }
     }
 
     fun selectAccount(accountId: Long, listType: String) {
-        currentAccountId = accountId
-        currentListType = listType
+        _selection.value = AccountSelection(accountId, listType)
         viewModelScope.launch {
             _currentAccount.value = dao.getAccountById(accountId)
         }
-        loadSnapshots()
-    }
-
-    fun loadSnapshots() {
-        dao.getSnapshots(currentAccountId, currentListType).observeForever {
-            _snapshots.value = it
-        }
-        compareLastTwo()
     }
 
     fun createSnapshot(usernames: List<String>, label: String = "") {
+        val sel = _selection.value ?: return
         viewModelScope.launch {
             val clean = usernames
                 .map { it.trim().removePrefix("@").lowercase() }
-                .filter { it.isNotBlank() }.distinct()
+                .filter { it.isNotBlank() }
+                .distinct()
 
             if (clean.isEmpty()) {
-                _status.value = "LIST IS EMPTY"; return@launch
+                _status.value = "СПИСОК ПУСТ"
+                return@launch
             }
 
-            val typeLabel = if (currentListType == "followers") "FOLLOWERS" else "FOLLOWING"
+            val typeLabel = if (sel.listType == "followers") "ПОДПИСЧИКИ" else "ПОДПИСКИ"
             val snapshot = Snapshot(
-                accountId = currentAccountId,
-                listType = currentListType,
+                accountId = sel.accountId,
+                listType = sel.listType,
                 count = clean.size,
-                label = label.ifBlank { "$typeLabel SNAPSHOT (${clean.size})" }
+                label = label.ifBlank { "$typeLabel СНИМОК (${clean.size})" }
             )
             val id = dao.insertSnapshot(snapshot)
             dao.insertFollowers(clean.map { Follower(snapshotId = id, username = it) })
-            _status.value = "► SAVED: ${clean.size}"
-            loadSnapshots()
+            _status.value = "► СОХРАНЕНО: ${clean.size}"
         }
     }
 
-    fun compareLastTwo() {
+    fun deleteSnapshot(s: Snapshot) {
         viewModelScope.launch {
-            val last = dao.getLastTwoSnapshots(currentAccountId, currentListType)
-            if (last.size < 2) { _changes.value = null; return@launch }
-            val oldSet = dao.getFollowerUsernames(last[1].id).toSet()
-            val newSet = dao.getFollowerUsernames(last[0].id).toSet()
-            _changes.value = ChangeResult(
-                newUsers = (newSet - oldSet).sorted(),
-                goneUsers = (oldSet - newSet).sorted(),
-                oldSnapshot = last[1], newSnapshot = last[0]
-            )
+            dao.deleteSnapshot(s)
+            _status.value = "► УДАЛЕНО"
         }
     }
 
@@ -108,7 +117,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (followersSnap == null || followingSnap == null) {
                 _nonMutual.value = null
                 _status.value = if (followersSnap == null)
-                    "► COLLECT FOLLOWERS FIRST" else "► COLLECT FOLLOWING FIRST"
+                    "► СНАЧАЛА СОБЕРИТЕ ПОДПИСЧИКОВ"
+                else
+                    "► СНАЧАЛА СОБЕРИТЕ ПОДПИСКИ"
                 return@launch
             }
 
@@ -122,14 +133,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 followersCount = followers.size,
                 followingCount = following.size
             )
-        }
-    }
-
-    fun deleteSnapshot(s: Snapshot) {
-        viewModelScope.launch {
-            dao.deleteSnapshot(s)
-            _status.value = "► DELETED"
-            loadSnapshots()
         }
     }
 }
