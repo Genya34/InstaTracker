@@ -17,7 +17,7 @@ class SnapshotsListFragment : Fragment() {
     private val viewModel by lazy {
         ViewModelProvider(
             requireActivity(),
-            MainViewModelFactory(requireActivity().application)
+            MainViewModelFactory.getInstance(requireActivity().application)
         )[MainViewModel::class.java]
     }
 
