@@ -21,7 +21,7 @@ class NonMutualFragment : Fragment() {
     private val viewModel by lazy {
         ViewModelProvider(
             requireActivity(),
-            MainViewModelFactory(requireActivity().application)
+            MainViewModelFactory.getInstance(requireActivity().application)
         )[MainViewModel::class.java]
     }
 
@@ -46,7 +46,8 @@ class NonMutualFragment : Fragment() {
         val accountId = arguments?.getLong(ARG_ACCOUNT_ID) ?: return
         binding.rvNonMutual.layoutManager = LinearLayoutManager(requireContext())
 
-        viewModel.computeNonMutual(accountId)
+        // Выбираем аккаунт — статистика посчитается автоматически через switchMap
+        viewModel.selectAccountForStats(accountId)
 
         binding.btnShowFans.setOnClickListener { filter = "fans"; refresh() }
         binding.btnShowNotMutual.setOnClickListener { filter = "not_mutual"; refresh() }
