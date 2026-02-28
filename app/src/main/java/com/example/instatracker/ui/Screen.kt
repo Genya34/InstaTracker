@@ -4,5 +4,6 @@ enum class Screen {
     ACCOUNTS,
     CHOOSE_TYPE,
     SNAPSHOTS,
-    STATS
+    STATS,
+    LIKES_STATS
 }
