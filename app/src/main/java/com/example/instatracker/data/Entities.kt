@@ -35,6 +35,49 @@ data class Follower(
     val username: String
 )
 
+// Пост — одна запись на каждый обработанный пост
+@Entity(
+    tableName = "posts",
+    foreignKeys = [ForeignKey(
+        entity = Account::class,
+        parentColumns = ["id"],
+        childColumns = ["accountId"],
+        onDelete = ForeignKey.CASCADE
+    )],
+    indices = [Index("accountId")]
+)
+data class Post(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val accountId: Long,
+    val postUrl: String,        // например /p/ABC123/
+    val timestamp: Long = System.currentTimeMillis(),
+    val likeCount: Int = 0      // сколько лайков удалось собрать
+)
+
+// Кто лайкнул конкретный пост
+@Entity(
+    tableName = "post_likers",
+    foreignKeys = [ForeignKey(
+        entity = Post::class,
+        parentColumns = ["id"],
+        childColumns = ["postId"],
+        onDelete = ForeignKey.CASCADE
+    )],
+    indices = [Index("postId")]
+)
+data class PostLiker(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val postId: Long,
+    val username: String
+)
+
+// Итоговая статистика по одному пользователю — кто сколько раз лайкнул
+data class LikerStat(
+    val username: String,
+    val likeCount: Int,      // в скольких постах из собранных лайкнул
+    val totalPosts: Int      // всего постов в выборке
+)
+
 data class ChangeResult(
     val newUsers: List<String>,
     val goneUsers: List<String>,
