@@ -70,6 +70,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Обработчик результата от LikesCollectorActivity
+    private val likesLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val encoded = result.data?.getStringExtra(LikesCollectorActivity.EXTRA_RESULT) ?: return@registerForActivityResult
+            val accountId = result.data?.getLongExtra(LikesCollectorActivity.EXTRA_ACCOUNT_ID, 0) ?: return@registerForActivityResult
+            if (encoded.isNotBlank() && accountId > 0) {
+                viewModel.saveLikesResult(accountId, encoded)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -104,7 +117,6 @@ class MainActivity : AppCompatActivity() {
         viewModel.status.observe(this) { message ->
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         }
-
         viewModel.error.observe(this) { message ->
             Toast.makeText(this, "⚠️ $message", Toast.LENGTH_LONG).show()
         }
@@ -122,7 +134,7 @@ class MainActivity : AppCompatActivity() {
         when (currentScreen) {
             Screen.SNAPSHOTS -> viewModel.currentAccount.value?.let { showChooseType(it) } ?: showAccountsList()
             Screen.CHOOSE_TYPE -> showAccountsList()
-            Screen.STATS -> {
+            Screen.STATS, Screen.LIKES_STATS -> {
                 val f = supportFragmentManager.findFragmentById(binding.mainContainer.id)
                 if (f != null) supportFragmentManager.beginTransaction().remove(f).commit()
                 viewModel.currentAccount.value?.let { showChooseType(it) } ?: showAccountsList()
@@ -201,6 +213,9 @@ class MainActivity : AppCompatActivity() {
         screen.cardStatistics.setOnClickListener {
             showStatsScreen(account)
         }
+        screen.cardLikes.setOnClickListener {
+            launchLikesCollector(account)
+        }
     }
 
     // ── Экран снимков ─────────────────────────────────────────────────────
@@ -229,7 +244,7 @@ class MainActivity : AppCompatActivity() {
         }.attach()
     }
 
-    // ── Экран статистики ──────────────────────────────────────────────────
+    // ── Экран статистики взаимности ───────────────────────────────────────
 
     private fun showStatsScreen(account: Account) {
         currentScreen = Screen.STATS
@@ -247,25 +262,59 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
-    // ── Диалог добавления аккаунта — теперь из XML ────────────────────────
+    // ── Экран статистики лайков ───────────────────────────────────────────
 
-    private fun showAddAccountDialog() {
-        val dv = DialogAddAccountBinding.inflate(layoutInflater)
+    private fun showLikesStatsScreen(account: Account) {
+        currentScreen = Screen.LIKES_STATS
+        binding.toolbar.title = "@${account.username}"
+        binding.toolbar.subtitle = getString(R.string.toolbar_subtitle_likes)
+        binding.fabAdd.hide()
+        binding.tabLayout.visibility = View.GONE
+        binding.viewPager.visibility = View.GONE
+        binding.mainContainer.visibility = View.VISIBLE
+        binding.mainContainer.removeAllViews()
+        updateBackArrow()
 
+        supportFragmentManager.beginTransaction()
+            .replace(binding.mainContainer.id, LikesStatsFragment.newInstance(account.id))
+            .commit()
+    }
+
+    // ── Запуск сборщика лайков ────────────────────────────────────────────
+
+    private fun launchLikesCollector(account: Account) {
+        // Сначала показываем диалог с выбором: собрать новые данные или посмотреть сохранённые
         AlertDialog.Builder(this)
-            .setTitle(R.string.dialog_add_account_title)
-            .setView(dv.root)
-            .setPositiveButton(R.string.btn_add) { _, _ ->
-                viewModel.addAccount(
-                    dv.etUsername.text.toString(),
-                    dv.etNote.text.toString()
+            .setTitle(getString(R.string.likes_title, account.username))
+            .setMessage(R.string.likes_choose_action)
+            .setPositiveButton(R.string.likes_btn_collect) { _, _ ->
+                likesLauncher.launch(
+                    Intent(this, LikesCollectorActivity::class.java).apply {
+                        putExtra(LikesCollectorActivity.EXTRA_USERNAME, account.username)
+                        putExtra(LikesCollectorActivity.EXTRA_ACCOUNT_ID, account.id)
+                    }
                 )
+            }
+            .setNeutralButton(R.string.likes_btn_view_stats) { _, _ ->
+                showLikesStatsScreen(account)
             }
             .setNegativeButton(R.string.btn_cancel, null)
             .show()
     }
 
-    // ── Диалог добавления снимка ──────────────────────────────────────────
+    // ── Диалоги ───────────────────────────────────────────────────────────
+
+    private fun showAddAccountDialog() {
+        val dv = DialogAddAccountBinding.inflate(layoutInflater)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.dialog_add_account_title)
+            .setView(dv.root)
+            .setPositiveButton(R.string.btn_add) { _, _ ->
+                viewModel.addAccount(dv.etUsername.text.toString(), dv.etNote.text.toString())
+            }
+            .setNegativeButton(R.string.btn_cancel, null)
+            .show()
+    }
 
     fun showAddSnapshotDialog() {
         val dv = DialogAddSnapshotBinding.inflate(layoutInflater)
@@ -302,11 +351,8 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    // ── Помощь — теперь из XML ────────────────────────────────────────────
-
     fun showHelp() {
         val dv = ScreenHelpBinding.inflate(layoutInflater)
-
         AlertDialog.Builder(this)
             .setView(dv.root)
             .setPositiveButton(R.string.btn_ok, null)
