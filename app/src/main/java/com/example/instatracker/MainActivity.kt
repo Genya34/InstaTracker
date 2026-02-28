@@ -6,8 +6,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
-import android.widget.ScrollView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,9 +16,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.instatracker.data.Account
 import com.example.instatracker.databinding.ActivityMainBinding
+import com.example.instatracker.databinding.DialogAddAccountBinding
 import com.example.instatracker.databinding.DialogAddSnapshotBinding
 import com.example.instatracker.databinding.ScreenAccountsBinding
 import com.example.instatracker.databinding.ScreenChooseTypeBinding
+import com.example.instatracker.databinding.ScreenHelpBinding
 import com.example.instatracker.ui.*
 import com.example.instatracker.util.InstagramJsonParser
 import com.google.android.material.tabs.TabLayoutMediator
@@ -171,7 +171,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ── Экран выбора режима — теперь из XML ───────────────────────────────
+    // ── Экран выбора режима ───────────────────────────────────────────────
 
     private fun showChooseType(account: Account) {
         currentScreen = Screen.CHOOSE_TYPE
@@ -187,8 +187,6 @@ class MainActivity : AppCompatActivity() {
         container.removeAllViews()
 
         val screen = ScreenChooseTypeBinding.inflate(layoutInflater, container, true)
-
-        // Подставляем имя аккаунта в подзаголовки
         screen.tvFollowersSub.text = getString(R.string.mode_followers_sub, account.username)
         screen.tvFollowingSub.text = getString(R.string.mode_following_sub, account.username)
 
@@ -205,7 +203,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ── Остальные экраны ──────────────────────────────────────────────────
+    // ── Экран снимков ─────────────────────────────────────────────────────
 
     fun showSnapshotsScreen(account: Account, listType: String) {
         currentScreen = Screen.SNAPSHOTS
@@ -231,6 +229,8 @@ class MainActivity : AppCompatActivity() {
         }.attach()
     }
 
+    // ── Экран статистики ──────────────────────────────────────────────────
+
     private fun showStatsScreen(account: Account) {
         currentScreen = Screen.STATS
         binding.toolbar.title = "@${account.username}"
@@ -247,45 +247,25 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
-    // ── Диалоги ───────────────────────────────────────────────────────────
+    // ── Диалог добавления аккаунта — теперь из XML ────────────────────────
 
     private fun showAddAccountDialog() {
-        val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(48, 24, 48, 8)
-        }
-        val etUsernameLayout = com.google.android.material.textfield.TextInputLayout(this).apply {
-            hint = getString(R.string.hint_username)
-            val p = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT)
-            p.bottomMargin = 12; layoutParams = p
-        }
-        val etUsername = com.google.android.material.textfield.TextInputEditText(this).apply {
-            typeface = android.graphics.Typeface.MONOSPACE
-        }
-        etUsernameLayout.addView(etUsername)
-
-        val etNoteLayout = com.google.android.material.textfield.TextInputLayout(this).apply {
-            hint = getString(R.string.hint_note)
-        }
-        val etNote = com.google.android.material.textfield.TextInputEditText(this).apply {
-            typeface = android.graphics.Typeface.MONOSPACE
-        }
-        etNoteLayout.addView(etNote)
-
-        layout.addView(etUsernameLayout)
-        layout.addView(etNoteLayout)
+        val dv = DialogAddAccountBinding.inflate(layoutInflater)
 
         AlertDialog.Builder(this)
             .setTitle(R.string.dialog_add_account_title)
-            .setView(layout)
+            .setView(dv.root)
             .setPositiveButton(R.string.btn_add) { _, _ ->
-                viewModel.addAccount(etUsername.text.toString(), etNote.text.toString())
+                viewModel.addAccount(
+                    dv.etUsername.text.toString(),
+                    dv.etNote.text.toString()
+                )
             }
             .setNegativeButton(R.string.btn_cancel, null)
             .show()
     }
+
+    // ── Диалог добавления снимка ──────────────────────────────────────────
 
     fun showAddSnapshotDialog() {
         val dv = DialogAddSnapshotBinding.inflate(layoutInflater)
@@ -322,42 +302,13 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    // ── Помощь ────────────────────────────────────────────────────────────
+    // ── Помощь — теперь из XML ────────────────────────────────────────────
 
     fun showHelp() {
-        val scroll = ScrollView(this)
-        val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(48, 24, 48, 24)
-        }
-        scroll.addView(layout)
-
-        fun addText(resId: Int, sizeSp: Float = 14f, bold: Boolean = false, colorResId: Int = R.color.textPrimary) {
-            layout.addView(TextView(this).apply {
-                setText(resId); textSize = sizeSp
-                setTypeface(android.graphics.Typeface.MONOSPACE,
-                    if (bold) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
-                setTextColor(getColor(colorResId))
-                setLineSpacing(3f, 1f)
-                val p = android.widget.LinearLayout.LayoutParams(
-                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT)
-                p.bottomMargin = 12; layoutParams = p
-            })
-        }
-
-        addText(R.string.help_title, 20f, true, R.color.colorPrimary)
-        addText(R.string.help_divider, 12f, false, R.color.textDivider)
-        addText(R.string.help_auto_title, 16f, true, R.color.colorFollowing)
-        addText(R.string.help_auto_body)
-        addText(R.string.help_divider, 12f, false, R.color.textDivider)
-        addText(R.string.help_stats_title, 16f, true, R.color.colorStatistics)
-        addText(R.string.help_stats_body)
-        addText(R.string.help_divider, 12f, false, R.color.textDivider)
-        addText(R.string.help_tip, 13f, false, R.color.textSecondary)
+        val dv = ScreenHelpBinding.inflate(layoutInflater)
 
         AlertDialog.Builder(this)
-            .setView(scroll)
+            .setView(dv.root)
             .setPositiveButton(R.string.btn_ok, null)
             .show()
     }
