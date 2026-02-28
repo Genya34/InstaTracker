@@ -139,14 +139,16 @@ class LikesCollectorActivity : AppCompatActivity() {
     private fun collectPostLinks() {
         tvProgress.text = getString(R.string.likes_collecting_posts)
 
+        val skipPattern = """/^\/p\/[^\/]+\/?$/"""
         val js = """
             (function() {
                 var links = document.querySelectorAll('a[href*="/p/"]');
                 var posts = [];
                 var seen = {};
+                var pattern = new RegExp('^\/p\/[^\/]+\/?${'$'}');
                 for (var i = 0; i < links.length; i++) {
                     var href = links[i].getAttribute('href');
-                    if (href && href.match(/^\/p\/[^\/]+\/?${'$'}/) && !seen[href]) {
+                    if (href && pattern.test(href) && !seen[href]) {
                         seen[href] = true;
                         posts.push(href);
                         if (posts.length >= $POSTS_TO_COLLECT) break;
