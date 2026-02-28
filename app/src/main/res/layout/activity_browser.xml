@@ -26,7 +26,7 @@
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="► LOADING..."
+                android:text="@string/browser_loading"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
@@ -36,11 +36,12 @@
                 android:id="@+id/tvHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="LOGIN TO INSTAGRAM IF NEEDED"
+                android:text="@string/browser_hint_login"
                 android:textColor="#A898D0"
                 android:textSize="12sp"
                 android:fontFamily="monospace"
                 android:layout_marginTop="4dp" />
+
         </LinearLayout>
 
         <ImageButton
@@ -49,9 +50,10 @@
             android:layout_height="44dp"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Close"
+            android:contentDescription="@string/btn_cancel"
             android:layout_marginStart="8dp"
             app:tint="@android:color/white" />
+
     </LinearLayout>
 
     <com.google.android.material.card.MaterialCardView
@@ -76,7 +78,7 @@
                 android:id="@+id/tvProgress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="◆ SCROLL DOWN OR TAP AUTO-SCROLL ◆"
+                android:text="@string/browser_hint_ready"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp"
                 android:fontFamily="monospace"
@@ -103,7 +105,7 @@
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:text="► SCROLL"
+                    android:text="@string/btn_auto_scroll"
                     android:textSize="13sp"
                     android:fontFamily="monospace"
                     android:textStyle="bold"
@@ -117,7 +119,7 @@
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:text="★ COLLECT"
+                    android:text="@string/btn_collect"
                     android:textSize="13sp"
                     android:fontFamily="monospace"
                     android:textStyle="bold"
@@ -125,6 +127,7 @@
                     app:cornerRadius="4dp"
                     app:backgroundTint="@color/snes_green"
                     android:textColor="@android:color/white" />
+
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -135,4 +138,5 @@
         android:layout_height="match_parent"
         android:layout_below="@id/topBar"
         android:layout_above="@id/bottomBar" />
+
 </RelativeLayout>
