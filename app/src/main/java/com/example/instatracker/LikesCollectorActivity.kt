@@ -39,6 +39,9 @@ class LikesCollectorActivity : AppCompatActivity() {
     private var postSearchAttempts = 0
     private val maxPostSearchAttempts = 5
 
+    // JS-скрипты загружаются из assets один раз
+    private var jsCode = ""
+
     companion object {
         const val EXTRA_USERNAME = "username"
         const val EXTRA_ACCOUNT_ID = "accountId"
@@ -63,6 +66,9 @@ class LikesCollectorActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.btnClose).setOnClickListener { finish() }
 
         tvTitle.text = getString(R.string.likes_title, targetUsername)
+
+        // Загружаем JS из assets
+        jsCode = assets.open("likes_collector.js").bufferedReader().readText()
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -131,35 +137,16 @@ class LikesCollectorActivity : AppCompatActivity() {
         webView.webChromeClient = WebChromeClient()
     }
 
+    // Вызывает функцию из JS-файла
+    private fun evalJs(functionCall: String) {
+        webView.evaluateJavascript("$jsCode\n$functionCall", null)
+    }
+
     private fun tryCollectPostLinks() {
         if (!isCollecting) return
         tvProgress.text = getString(R.string.likes_collecting_posts)
-
-        val scrollJs = "window.scrollTo(0, 300);"
-        webView.evaluateJavascript(scrollJs, null)
-
-        handler.postDelayed({ collectPostLinks() }, 1500)
-    }
-
-    private fun collectPostLinks() {
-        if (!isCollecting) return
-        val maxPosts = POSTS_TO_COLLECT
-        val js = buildString {
-            append("(function(){")
-            append("var links=document.querySelectorAll('a[href]');")
-            append("var posts=[];var seen={};")
-            append("for(var i=0;i<links.length;i++){")
-            append("var href=links[i].getAttribute('href');")
-            append("if(!href)continue;")
-            append("if(href.indexOf('/p/')!==0)continue;")
-            append("if(seen[href])continue;")
-            append("seen[href]=true;posts.push(href);")
-            append("if(posts.length>=$maxPosts)break;")
-            append("}")
-            append("Android.onPostsFound(JSON.stringify(posts));")
-            append("})()")
-        }
-        webView.evaluateJavascript(js, null)
+        evalJs("scrollProfile();")
+        handler.postDelayed({ evalJs("collectPostLinks($POSTS_TO_COLLECT);") }, 1500)
     }
 
     private fun openNextPost() {
@@ -174,57 +161,13 @@ class LikesCollectorActivity : AppCompatActivity() {
     private fun collectLikesFromPost() {
         if (!isCollecting) return
         tvProgress.text = getString(R.string.likes_collecting_from_post, postsProcessed, totalPosts)
-        val js = buildString {
-            append("(function(){")
-            append("var btn=null;")
-            append("var els=document.querySelectorAll('button,a,span');")
-            append("for(var i=0;i<els.length;i++){")
-            append("var lbl=(els[i].getAttribute('aria-label')||'').toLowerCase();")
-            append("var txt=(els[i].textContent||'').toLowerCase();")
-            append("if(lbl.indexOf('like')!==-1||lbl.indexOf('нравится')!==-1||")
-            append("txt.indexOf(' likes')!==-1||txt.indexOf('нравится')!==-1){")
-            append("btn=els[i];break;}")
-            append("}")
-            append("if(btn){btn.click();Android.onLikeButtonClicked('found');}")
-            append("else{Android.onLikeButtonClicked('not_found');}")
-            append("})()")
-        }
-        webView.evaluateJavascript(js, null)
+        evalJs("collectLikesFromPost();")
     }
 
     private fun scrollAndCollectLikers() {
         handler.postDelayed({
             if (!isCollecting) return@postDelayed
-            val js = buildString {
-                append("(function(){")
-                append("var modal=null;")
-                append("var divs=document.querySelectorAll('div');")
-                append("for(var i=0;i<divs.length;i++){")
-                append("var role=divs[i].getAttribute('role');")
-                append("if(role==='dialog'&&divs[i].scrollHeight>divs[i].clientHeight+10){")
-                append("modal=divs[i];break;}")
-                append("}")
-                append("if(!modal){Android.onLikersScrollResult('no_modal','[]');return;}")
-                append("var prev=modal.scrollHeight;")
-                append("modal.scrollTo({top:modal.scrollHeight,behavior:'smooth'});")
-                append("var names=[];var seen={};")
-                append("var links=modal.querySelectorAll('a[href]');")
-                append("for(var i=0;i<links.length;i++){")
-                append("var href=links[i].getAttribute('href');")
-                append("if(!href||href.indexOf('/')!==0)continue;")
-                append("var parts=href.split('/').filter(function(p){return p.length>0;});")
-                append("if(parts.length!==1)continue;")
-                append("var name=parts[0].toLowerCase();")
-                append("if(name.length<1||name.length>30)continue;")
-                append("if(!seen[name]){seen[name]=true;names.push(name);}")
-                append("}")
-                append("setTimeout(function(){")
-                append("var more=modal.scrollHeight>prev;")
-                append("Android.onLikersScrollResult(more?'more':'end',JSON.stringify(names));")
-                append("},1500);")
-                append("})()")
-            }
-            webView.evaluateJavascript(js, null)
+            evalJs("scrollAndCollectLikers();")
         }, 2000)
     }
 
@@ -324,4 +267,57 @@ class LikesCollectorActivity : AppCompatActivity() {
             runOnUiThread {
                 if (!isCollecting) return@runOnUiThread
                 if (status == "found") {
-                    scrollAndC
+                    scrollAndCollectLikers()
+                } else {
+                    tvProgress.text = getString(R.string.likes_skip_post, postsProcessed, totalPosts)
+                    results[currentPostUrl] = mutableListOf()
+                    handler.postDelayed({ openNextPost() }, 1000)
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun onLikersScrollResult(status: String, json: String) {
+            runOnUiThread {
+                if (!isCollecting) return@runOnUiThread
+                try {
+                    val array = org.json.JSONArray(json)
+                    val likers = results.getOrPut(currentPostUrl) { mutableListOf() }
+                    for (i in 0 until array.length()) {
+                        val name = array.getString(i)
+                        if (!likers.contains(name)) likers.add(name)
+                    }
+                    when (status) {
+                        "more" -> {
+                            tvProgress.text = getString(
+                                R.string.likes_collecting_likers,
+                                postsProcessed, totalPosts, likers.size
+                            )
+                            scrollAndCollectLikers()
+                        }
+                        "no_modal" -> {
+                            handler.postDelayed({ scrollAndCollectLikers() }, 1500)
+                        }
+                        else -> {
+                            tvProgress.text = getString(
+                                R.string.likes_post_done,
+                                postsProcessed, totalPosts, likers.size
+                            )
+                            handler.postDelayed({
+                                webView.loadUrl("https://www.instagram.com/$targetUsername/")
+                            }, 800)
+                        }
+                    }
+                } catch (e: Exception) {
+                    handler.postDelayed({ openNextPost() }, 1000)
+                }
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacksAndMessages(null)
+        isCollecting = false
+    }
+}
