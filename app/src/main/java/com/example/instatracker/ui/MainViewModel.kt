@@ -19,12 +19,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentAccount = MutableLiveData<Account?>()
     val currentAccount: LiveData<Account?> = _currentAccount
 
-    // Снимки автоматически обновляются при смене selection
     val snapshots: LiveData<List<Snapshot>> = _selection.switchMap { sel ->
         dao.getSnapshots(sel.accountId, sel.listType)
     }
 
-    // Изменения автоматически пересчитываются при смене снимков
     val changes: LiveData<ChangeResult?> = snapshots.switchMap { list ->
         liveData {
             if (list.size < 2) {
@@ -49,7 +47,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Статистика автоматически пересчитывается при смене selection
     val nonMutual: LiveData<NonMutualResult?> = _selection.switchMap { sel ->
         liveData {
             try {
@@ -80,25 +77,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private val _likerStats = MutableLiveData<List<LikerStat>>()
+    val likerStats: LiveData<List<LikerStat>> = _likerStats
+
     private val _status = MutableLiveData<String>()
     val status: LiveData<String> = _status
 
-    // Отдельный канал для ошибок — чтобы отличать их от обычных статусов
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
 
-    // ──────────────────────────────────────
-    // Аккаунты
-    // ──────────────────────────────────────
+    // ── Аккаунты ──────────────────────────────────────────────────────────
 
     fun addAccount(username: String, note: String = "") {
         viewModelScope.launch {
             try {
                 val clean = username.trim().removePrefix("@").lowercase()
-                if (clean.isBlank()) {
-                    _status.value = "ВВЕДИТЕ ИМЯ ПОЛЬЗОВАТЕЛЯ"
-                    return@launch
-                }
+                if (clean.isBlank()) { _status.value = "ВВЕДИТЕ ИМЯ ПОЛЬЗОВАТЕЛЯ"; return@launch }
                 dao.insertAccount(Account(username = clean, note = note))
                 _status.value = "► @$clean ДОБАВЛЕН"
             } catch (e: Exception) {
@@ -129,7 +123,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Вызывается когда нужна только статистика — без смены типа списка
     fun selectAccountForStats(accountId: Long) {
         _selection.value = AccountSelection(accountId, "followers")
         viewModelScope.launch {
@@ -141,9 +134,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // ──────────────────────────────────────
-    // Снимки
-    // ──────────────────────────────────────
+    // ── Снимки ────────────────────────────────────────────────────────────
 
     fun createSnapshot(usernames: List<String>, label: String = "") {
         val sel = _selection.value ?: return
@@ -153,11 +144,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     .map { it.trim().removePrefix("@").lowercase() }
                     .filter { it.isNotBlank() }
                     .distinct()
-
-                if (clean.isEmpty()) {
-                    _status.value = "СПИСОК ПУСТ"
-                    return@launch
-                }
+                if (clean.isEmpty()) { _status.value = "СПИСОК ПУСТ"; return@launch }
 
                 val typeLabel = if (sel.listType == "followers") "ПОДПИСЧИКИ" else "ПОДПИСКИ"
                 val snapshot = Snapshot(
@@ -185,9 +172,62 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
+    // ── Лайки ─────────────────────────────────────────────────────────────
+
+    // Сохраняем результаты сбора лайков из LikesCollectorActivity
+    // encoded — строки вида "/p/ABC123/|user1,user2,user3"
+    fun saveLikesResult(accountId: Long, encoded: String) {
+        viewModelScope.launch {
+            try {
+                // Удаляем старые данные перед новым сохранением
+                dao.deleteAllPosts(accountId)
+
+                val lines = encoded.lines().filter { it.isNotBlank() }
+                var totalSaved = 0
+
+                for (line in lines) {
+                    val parts = line.split("|")
+                    if (parts.size != 2) continue
+
+                    val postUrl = parts[0]
+                    val likers = parts[1].split(",")
+                        .map { it.trim() }
+                        .filter { it.isNotBlank() }
+
+                    val postId = dao.insertPost(
+                        Post(
+                            accountId = accountId,
+                            postUrl = postUrl,
+                            likeCount = likers.size
+                        )
+                    )
+
+                    dao.insertPostLikers(likers.map { PostLiker(postId = postId, username = it) })
+                    totalSaved += likers.size
+                }
+
+                _status.value = "► ЛАЙКИ СОХРАНЕНЫ: $totalSaved"
+                // Обновляем статистику
+                loadLikerStats(accountId)
+
+            } catch (e: Exception) {
+                _error.value = "Не удалось сохранить лайки: ${e.message}"
+            }
+        }
+    }
+
+    fun loadLikerStats(accountId: Long) {
+        viewModelScope.launch {
+            try {
+                _likerStats.value = dao.getLikerStats(accountId)
+            } catch (e: Exception) {
+                _error.value = "Не удалось загрузить статистику лайков: ${e.message}"
+            }
+        }
+    }
 }
 
-// Фабрика вынесена в companion object — создаётся один раз, используется везде
 class MainViewModelFactory(
     private val app: Application
 ) : ViewModelProvider.Factory {
@@ -196,7 +236,6 @@ class MainViewModelFactory(
         MainViewModel(app) as T
 
     companion object {
-        // Единственный экземпляр фабрики на всё приложение
         @Volatile
         private var instance: MainViewModelFactory? = null
 
