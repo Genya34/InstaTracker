@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.widget.LinearLayout
@@ -16,11 +17,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.instatracker.data.Account
 import com.example.instatracker.databinding.ActivityMainBinding
 import com.example.instatracker.databinding.DialogAddSnapshotBinding
+import com.example.instatracker.databinding.ScreenAccountsBinding
 import com.example.instatracker.ui.*
 import com.example.instatracker.util.InstagramJsonParser
 import com.google.android.material.tabs.TabLayoutMediator
@@ -30,7 +31,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: MainViewModel
 
-    // Теперь экран — это enum, а не строка. Опечатка не скомпилируется.
     private var currentScreen = Screen.ACCOUNTS
     private var pendingLabel = ""
 
@@ -102,12 +102,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Обычные статусные сообщения
         viewModel.status.observe(this) { message ->
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         }
 
-        // Ошибки показываем отдельно — можно будет легко поменять на диалог
         viewModel.error.observe(this) { message ->
             Toast.makeText(this, "⚠️ $message", Toast.LENGTH_LONG).show()
         }
@@ -134,6 +132,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ── Экран аккаунтов — теперь из XML ──────────────────────────────────
+
     private fun showAccountsList() {
         currentScreen = Screen.ACCOUNTS
         binding.toolbar.title = getString(R.string.toolbar_title)
@@ -148,23 +148,9 @@ class MainActivity : AppCompatActivity() {
         container.visibility = View.VISIBLE
         container.removeAllViews()
 
-        val emptyView = TextView(this).apply {
-            setText(R.string.welcome_empty)
-            textSize = 15f
-            setTextColor(getColor(R.color.textHint))
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
-            setPadding(48, 200, 48, 48)
-            visibility = View.GONE
-            setTypeface(android.graphics.Typeface.MONOSPACE)
-        }
-        container.addView(emptyView)
-
-        val rv = RecyclerView(this).apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            setPadding(0, 8, 0, 200)
-            clipToPadding = false
-        }
-        container.addView(rv)
+        // Надуваем XML вместо создания views в коде
+        val screen = ScreenAccountsBinding.inflate(layoutInflater, container, true)
+        screen.rvAccounts.layoutManager = LinearLayoutManager(this)
 
         val adapter = AccountsAdapter(
             onClick = { showChooseType(it) },
@@ -177,15 +163,17 @@ class MainActivity : AppCompatActivity() {
                     .show()
             }
         )
-        rv.adapter = adapter
+        screen.rvAccounts.adapter = adapter
 
         viewModel.accounts.observe(this) { list ->
             adapter.submitList(list)
             val isEmpty = list.isEmpty()
-            emptyView.visibility = if (isEmpty) View.VISIBLE else View.GONE
-            rv.visibility = if (isEmpty) View.GONE else View.VISIBLE
+            screen.tvEmpty.visibility = if (isEmpty) View.VISIBLE else View.GONE
+            screen.rvAccounts.visibility = if (isEmpty) View.GONE else View.VISIBLE
         }
     }
+
+    // ── Остальные экраны пока без изменений ──────────────────────────────
 
     private fun showChooseType(account: Account) {
         currentScreen = Screen.CHOOSE_TYPE
@@ -200,8 +188,8 @@ class MainActivity : AppCompatActivity() {
         container.visibility = View.VISIBLE
         container.removeAllViews()
 
-        val layout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
+        val layout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
             setPadding(20, 28, 20, 28)
         }
 
@@ -228,20 +216,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun makeCard(
         icon: String, title: String, sub: String,
-        strokeColor: Int, layout: LinearLayout, onClick: () -> Unit
+        strokeColor: Int, layout: android.widget.LinearLayout, onClick: () -> Unit
     ) {
         val card = com.google.android.material.card.MaterialCardView(this).apply {
             radius = 8f; cardElevation = 0f
             strokeWidth = 4; this.strokeColor = strokeColor
             setCardBackgroundColor(getColor(R.color.cardBackground))
-            val p = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
+            val p = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT)
             p.bottomMargin = 12; layoutParams = p
             setOnClickListener { onClick() }
         }
-        val inner = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL; setPadding(24, 20, 24, 20)
+        val inner = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL; setPadding(24, 20, 24, 20)
         }
         inner.addView(TextView(this).apply {
             text = "$icon $title"; textSize = 17f
@@ -252,9 +240,9 @@ class MainActivity : AppCompatActivity() {
             text = sub; textSize = 12f
             setTypeface(android.graphics.Typeface.MONOSPACE)
             setTextColor(getColor(R.color.textSecondary))
-            val p = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
+            val p = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT)
             p.topMargin = 4; layoutParams = p
         })
         card.addView(inner)
@@ -302,14 +290,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showAddAccountDialog() {
-        val layout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL; setPadding(48, 24, 48, 8)
+        val layout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL; setPadding(48, 24, 48, 8)
         }
         val etUsernameLayout = com.google.android.material.textfield.TextInputLayout(this).apply {
             hint = getString(R.string.hint_username)
-            val p = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
+            val p = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT)
             p.bottomMargin = 12; layoutParams = p
         }
         val etUsername = com.google.android.material.textfield.TextInputEditText(this).apply {
@@ -375,8 +363,8 @@ class MainActivity : AppCompatActivity() {
 
     fun showHelp() {
         val scroll = ScrollView(this)
-        val layout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL; setPadding(48, 24, 48, 24)
+        val layout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL; setPadding(48, 24, 48, 24)
         }
         scroll.addView(layout)
 
@@ -387,9 +375,9 @@ class MainActivity : AppCompatActivity() {
                     if (bold) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
                 setTextColor(getColor(colorResId))
                 setLineSpacing(3f, 1f)
-                val p = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT)
+                val p = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT)
                 p.bottomMargin = 12; layoutParams = p
             })
         }
