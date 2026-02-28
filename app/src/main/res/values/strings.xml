@@ -130,4 +130,21 @@
     <string name="help_stats_title">★ СТАТИСТИКА</string>
     <string name="help_stats_body">1. СОБЕРИТЕ ПОДПИСЧИКОВ\n   И ПОДПИСКИ\n2. НАЖМИТЕ СТАТИСТИКА\n3. СМОТРИТЕ:\n   ♦ ФАНАТЫ — ПОДПИСАНЫ НА ВАС,\n     ВЫ НЕТ\n   ♥ НЕ ВЗАИМНО — ВЫ ПОДПИСАНЫ,\n     ОНИ НЕТ\n   ★ ВЗАИМНО — ПОДПИСАНЫ ДРУГ\n     НА ДРУГА</string>
     <string name="help_tip">НАЖМИТЕ НА ИМЯ ПОЛЬЗОВАТЕЛЯ\nЧТОБЫ ОТКРЫТЬ ПРОФИЛЬ В INSTAGRAM</string>
+
+    <!-- Сбор лайков -->
+    <string name="likes_title">★ ЛАЙКИ @%1$s</string>
+    <string name="likes_hint_ready">Нажмите «Начать» когда профиль загрузится</string>
+    <string name="likes_btn_start">★ НАЧАТЬ СБОР ЛАЙКОВ</string>
+    <string name="likes_collecting_posts">⏳ Ищу посты…</string>
+    <string name="likes_found_posts">✅ Найдено постов: %1$d. Начинаю обход…</string>
+    <string name="likes_no_posts">❌ Посты не найдены</string>
+    <string name="likes_progress">⏳ Пост %1$d из %2$d…</string>
+    <string name="likes_collecting_from_post">⏳ Пост %1$d из %2$d — открываю лайки…</string>
+    <string name="likes_collecting_likers">⏳ Пост %1$d/%2$d — собрано %3$d лайков…</string>
+    <string name="likes_post_done">✅ Пост %1$d/%2$d — %3$d лайков</string>
+    <string name="likes_skip_post">⏭ Пост %1$d из %2$d — лайки недоступны</string>
+    <string name="likes_stopped">⏹ Остановлено. Обработано постов: %1$d</string>
+    <string name="likes_done">✅ Готово! Постов: %1$d, лайков собрано: %2$d</string>
+    <string name="likes_done_title">✅ Сбор завершён (%1$d постов)</string>
+    <string name="likes_done_message">Собрано лайков: %1$d\n\nСохранить результаты?</string>
 </resources>
