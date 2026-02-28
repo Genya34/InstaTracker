@@ -17,17 +17,23 @@
     <string name="btn_delete">УДАЛИТЬ</string>
     <string name="btn_ok">ОК</string>
     <string name="btn_help">Помощь</string>
-    <string name="btn_browser">🌐 Браузер</string>
-    <string name="btn_import_json">📂 JSON</string>
-    <string name="btn_instruction">❓ Инструкция</string>
+    <string name="btn_browser">► АВТО-СБОР</string>
+    <string name="btn_import_json">▣ ИМПОРТ JSON</string>
+    <string name="btn_instruction">▸ ПОМОЩЬ</string>
     <string name="btn_auto_scroll">🔄 Автопрокрутка</string>
     <string name="btn_stop_scroll">⏹ Остановить</string>
-    <string name="btn_collect">📋 Собрать</string>
+    <string name="btn_collect">★ СОБРАТЬ</string>
     <string name="btn_scroll_more">🔄 Прокрутить ещё</string>
 
     <!-- Вкладки -->
     <string name="tab_snapshots">СНИМКИ</string>
     <string name="tab_changes">ИЗМЕНЕНИЯ</string>
+
+    <!-- Диалог снимка -->
+    <string name="dialog_add_snapshot_title">◆ НОВЫЙ СНИМОК ◆</string>
+    <string name="or_enter_manually">─── ИЛИ ВВЕДИТЕ ВРУЧНУЮ ───</string>
+    <string name="hint_label">НАЗВАНИЕ (НЕОБЯЗАТЕЛЬНО)</string>
+    <string name="hint_usernames_placeholder">user1\nuser2\nuser3</string>
 
     <!-- Экран аккаунтов -->
     <string name="welcome_empty">◆ ДОБРО ПОЖАЛОВАТЬ ◆\n\nНАЖМИТЕ [+ ДОБАВИТЬ]\nЧТОБЫ НАЧАТЬ ОТСЛЕЖИВАНИЕ</string>
@@ -35,16 +41,16 @@
     <string name="icon_account">👤</string>
 
     <!-- Режимы -->
-    <string name="mode_followers">ПОДПИСЧИКИ</string>
-    <string name="mode_following">ПОДПИСКИ</string>
+    <string name="mode_followers">► ПОДПИСЧИКИ</string>
+    <string name="mode_following">► ПОДПИСКИ</string>
     <string name="mode_followers_sub">КТО ПОДПИСАН НА @%1$s</string>
     <string name="mode_following_sub">НА КОГО ПОДПИСАН @%1$s</string>
-    <string name="mode_statistics">СТАТИСТИКА</string>
+    <string name="mode_statistics">★ СТАТИСТИКА</string>
     <string name="mode_statistics_sub">ФАНАТЫ / НЕ ВЗАИМНО / ВЗАИМНО</string>
 
     <!-- Диалог добавления аккаунта -->
     <string name="dialog_add_account_title">◆ ДОБАВИТЬ АККАУНТ ◆</string>
-    <string name="hint_username">ИМЯПОЛЬЗОВАТЕЛЯ</string>
+    <string name="hint_username">ИМЯ ПОЛЬЗОВАТЕЛЯ</string>
     <string name="hint_note">ЗАМЕТКА (НЕОБЯЗАТЕЛЬНО)</string>
 
     <!-- Диалог удаления аккаунта -->
@@ -83,7 +89,7 @@
     <string name="no_not_mutual">◆ ВСЕ ВЗАИМНЫ ◆</string>
     <string name="no_mutual">◆ НЕТ ВЗАИМНЫХ ◆</string>
 
-    <!-- Статусные сообщения (Toast) -->
+    <!-- Статусные сообщения -->
     <string name="status_enter_username">ВВЕДИТЕ ИМЯ ПОЛЬЗОВАТЕЛЯ</string>
     <string name="status_account_added">► @%1$s ДОБАВЛЕН</string>
     <string name="status_account_deleted">► АККАУНТ УДАЛЁН</string>
