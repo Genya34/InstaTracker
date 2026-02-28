@@ -147,4 +147,16 @@
     <string name="likes_done">✅ Готово! Постов: %1$d, лайков собрано: %2$d</string>
     <string name="likes_done_title">✅ Сбор завершён (%1$d постов)</string>
     <string name="likes_done_message">Собрано лайков: %1$d\n\nСохранить результаты?</string>
+
+    <!-- Режим лайков -->
+    <string name="mode_likes">❤ ЛАЙКИ</string>
+    <string name="mode_likes_sub">КТО ЛАЙКАЕТ ПОСТЫ @%1$s</string>
+    <string name="toolbar_subtitle_likes">◆ СТАТИСТИКА ЛАЙКОВ ◆</string>
+
+    <!-- Статистика лайков -->
+    <string name="likes_stats_empty">◆ ДАННЫХ ЕЩЁ НЕТ ◆\n\nНАЖМИТЕ «СОБРАТЬ ЛАЙКИ»\nЧТОБЫ НАЧАТЬ СБОР</string>
+    <string name="likes_stats_summary">Постов обработано: %1$d\nУникальных лайкнувших: %2$d\nЛайкнули все посты: %3$d ⭐</string>
+    <string name="likes_choose_action">Что хотите сделать?</string>
+    <string name="likes_btn_collect">🔄 Собрать лайки</string>
+    <string name="likes_btn_view_stats">📊 Посмотреть статистику</string>
 </resources>
