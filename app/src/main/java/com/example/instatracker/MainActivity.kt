@@ -4,10 +4,8 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
-import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -22,6 +20,7 @@ import com.example.instatracker.data.Account
 import com.example.instatracker.databinding.ActivityMainBinding
 import com.example.instatracker.databinding.DialogAddSnapshotBinding
 import com.example.instatracker.databinding.ScreenAccountsBinding
+import com.example.instatracker.databinding.ScreenChooseTypeBinding
 import com.example.instatracker.ui.*
 import com.example.instatracker.util.InstagramJsonParser
 import com.google.android.material.tabs.TabLayoutMediator
@@ -132,7 +131,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ── Экран аккаунтов — теперь из XML ──────────────────────────────────
+    // ── Экран аккаунтов ───────────────────────────────────────────────────
 
     private fun showAccountsList() {
         currentScreen = Screen.ACCOUNTS
@@ -148,7 +147,6 @@ class MainActivity : AppCompatActivity() {
         container.visibility = View.VISIBLE
         container.removeAllViews()
 
-        // Надуваем XML вместо создания views в коде
         val screen = ScreenAccountsBinding.inflate(layoutInflater, container, true)
         screen.rvAccounts.layoutManager = LinearLayoutManager(this)
 
@@ -173,7 +171,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ── Остальные экраны пока без изменений ──────────────────────────────
+    // ── Экран выбора режима — теперь из XML ───────────────────────────────
 
     private fun showChooseType(account: Account) {
         currentScreen = Screen.CHOOSE_TYPE
@@ -188,66 +186,26 @@ class MainActivity : AppCompatActivity() {
         container.visibility = View.VISIBLE
         container.removeAllViews()
 
-        val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(20, 28, 20, 28)
-        }
+        val screen = ScreenChooseTypeBinding.inflate(layoutInflater, container, true)
 
-        makeCard("►", getString(R.string.mode_followers),
-            getString(R.string.mode_followers_sub, account.username),
-            getColor(R.color.colorFollowers), layout) {
+        // Подставляем имя аккаунта в подзаголовки
+        screen.tvFollowersSub.text = getString(R.string.mode_followers_sub, account.username)
+        screen.tvFollowingSub.text = getString(R.string.mode_following_sub, account.username)
+
+        screen.cardFollowers.setOnClickListener {
             viewModel.selectAccount(account.id, "followers")
             showSnapshotsScreen(account, "followers")
         }
-        makeCard("►", getString(R.string.mode_following),
-            getString(R.string.mode_following_sub, account.username),
-            getColor(R.color.colorFollowing), layout) {
+        screen.cardFollowing.setOnClickListener {
             viewModel.selectAccount(account.id, "following")
             showSnapshotsScreen(account, "following")
         }
-        makeCard("★", getString(R.string.mode_statistics),
-            getString(R.string.mode_statistics_sub),
-            getColor(R.color.colorStatistics), layout) {
+        screen.cardStatistics.setOnClickListener {
             showStatsScreen(account)
         }
-
-        container.addView(layout)
     }
 
-    private fun makeCard(
-        icon: String, title: String, sub: String,
-        strokeColor: Int, layout: android.widget.LinearLayout, onClick: () -> Unit
-    ) {
-        val card = com.google.android.material.card.MaterialCardView(this).apply {
-            radius = 8f; cardElevation = 0f
-            strokeWidth = 4; this.strokeColor = strokeColor
-            setCardBackgroundColor(getColor(R.color.cardBackground))
-            val p = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT)
-            p.bottomMargin = 12; layoutParams = p
-            setOnClickListener { onClick() }
-        }
-        val inner = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL; setPadding(24, 20, 24, 20)
-        }
-        inner.addView(TextView(this).apply {
-            text = "$icon $title"; textSize = 17f
-            setTypeface(android.graphics.Typeface.MONOSPACE, android.graphics.Typeface.BOLD)
-            setTextColor(getColor(R.color.textPrimary))
-        })
-        inner.addView(TextView(this).apply {
-            text = sub; textSize = 12f
-            setTypeface(android.graphics.Typeface.MONOSPACE)
-            setTextColor(getColor(R.color.textSecondary))
-            val p = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT)
-            p.topMargin = 4; layoutParams = p
-        })
-        card.addView(inner)
-        layout.addView(card)
-    }
+    // ── Остальные экраны ──────────────────────────────────────────────────
 
     fun showSnapshotsScreen(account: Account, listType: String) {
         currentScreen = Screen.SNAPSHOTS
@@ -289,9 +247,12 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
+    // ── Диалоги ───────────────────────────────────────────────────────────
+
     private fun showAddAccountDialog() {
         val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL; setPadding(48, 24, 48, 8)
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(48, 24, 48, 8)
         }
         val etUsernameLayout = com.google.android.material.textfield.TextInputLayout(this).apply {
             hint = getString(R.string.hint_username)
@@ -361,10 +322,13 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    // ── Помощь ────────────────────────────────────────────────────────────
+
     fun showHelp() {
         val scroll = ScrollView(this)
         val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL; setPadding(48, 24, 48, 24)
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(48, 24, 48, 24)
         }
         scroll.addView(layout)
 
