@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
@@ -39,7 +40,6 @@ class LikesCollectorActivity : AppCompatActivity() {
     private var postSearchAttempts = 0
     private val maxPostSearchAttempts = 5
 
-    // JS-скрипты загружаются из assets один раз
     private var jsCode = ""
 
     companion object {
@@ -47,6 +47,7 @@ class LikesCollectorActivity : AppCompatActivity() {
         const val EXTRA_ACCOUNT_ID = "accountId"
         const val EXTRA_RESULT = "likes_result"
         const val POSTS_TO_COLLECT = 20
+        const val TAG = "LikesCollector"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -66,8 +67,6 @@ class LikesCollectorActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.btnClose).setOnClickListener { finish() }
 
         tvTitle.text = getString(R.string.likes_title, targetUsername)
-
-        // Загружаем JS из assets
         jsCode = assets.open("likes_collector.js").bufferedReader().readText()
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -107,21 +106,42 @@ class LikesCollectorActivity : AppCompatActivity() {
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                Log.d(TAG, "onPageStarted: $url")
                 if (!isCollecting) tvTitle.text = getString(R.string.browser_loading)
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
+                Log.d(TAG, "onPageFinished: $url")
+
                 if (!isCollecting) {
                     tvTitle.text = getString(R.string.likes_title, targetUsername)
                     tvProgress.text = getString(R.string.likes_hint_ready)
                     return
                 }
-                val isPost = url?.contains("/p/") == true
-                if (isPost) {
-                    handler.postDelayed({ collectLikesFromPost() }, 3000)
-                } else {
-                    postSearchAttempts = 0
-                    handler.postDelayed({ tryCollectPostLinks() }, 3000)
+
+                val safeUrl = url ?: ""
+                val isLikedBy = safeUrl.contains("liked_by")
+                val isPost = safeUrl.contains("/p/") && !isLikedBy
+                val isProfile = safeUrl.contains("instagram.com/$targetUsername") && !isPost && !isLikedBy
+
+                Log.d(TAG, "isLikedBy=$isLikedBy isPost=$isPost isProfile=$isProfile")
+
+                when {
+                    isLikedBy -> {
+                        // Страница лайков — ждём и собираем
+                        tvProgress.text = getString(R.string.likes_collecting_from_post, postsProcessed, totalPosts)
+                        handler.postDelayed({ scrollAndCollectLikers() }, 2500)
+                    }
+                    isPost -> {
+                        // Открылся пост вместо liked_by — добавляем /liked_by/ и грузим
+                        Log.d(TAG, "Got post page, redirecting to liked_by")
+                        val likedByUrl = safeUrl.trimEnd('/') + "/liked_by/"
+                        handler.postDelayed({ webView.loadUrl(likedByUrl) }, 1000)
+                    }
+                    isProfile -> {
+                        postSearchAttempts = 0
+                        handler.postDelayed({ tryCollectPostLinks() }, 3000)
+                    }
                 }
             }
 
@@ -129,7 +149,9 @@ class LikesCollectorActivity : AppCompatActivity() {
                 view: WebView?,
                 request: android.webkit.WebResourceRequest?
             ): Boolean {
-                val host = request?.url?.host ?: return true
+                val url = request?.url?.toString() ?: return true
+                val host = request.url?.host ?: return true
+                Log.d(TAG, "shouldOverrideUrlLoading: $url")
                 return !host.endsWith("instagram.com")
             }
         }
@@ -137,7 +159,6 @@ class LikesCollectorActivity : AppCompatActivity() {
         webView.webChromeClient = WebChromeClient()
     }
 
-    // Вызывает функцию из JS-файла
     private fun evalJs(functionCall: String) {
         webView.evaluateJavascript("$jsCode\n$functionCall", null)
     }
@@ -155,20 +176,15 @@ class LikesCollectorActivity : AppCompatActivity() {
         currentPostUrl = postQueue.removeAt(0)
         postsProcessed++
         tvProgress.text = getString(R.string.likes_progress, postsProcessed, totalPosts)
-        webView.loadUrl("https://www.instagram.com$currentPostUrl")
-    }
-
-    private fun collectLikesFromPost() {
-        if (!isCollecting) return
-        tvProgress.text = getString(R.string.likes_collecting_from_post, postsProcessed, totalPosts)
-        evalJs("collectLikesFromPost();")
+        val fullUrl = "https://www.instagram.com$currentPostUrl"
+        Log.d(TAG, "Opening: $fullUrl")
+        webView.loadUrl(fullUrl)
     }
 
     private fun scrollAndCollectLikers() {
-        handler.postDelayed({
-            if (!isCollecting) return@postDelayed
-            evalJs("scrollAndCollectLikers();")
-        }, 2000)
+        if (!isCollecting) return
+        Log.d(TAG, "scrollAndCollectLikers, url=${webView.url}")
+        evalJs("scrollAndCollectLikers();")
     }
 
     private fun finishCollecting() {
@@ -236,10 +252,12 @@ class LikesCollectorActivity : AppCompatActivity() {
             runOnUiThread {
                 if (!isCollecting) return@runOnUiThread
                 try {
+                    Log.d(TAG, "onPostsFound: $json")
                     val array = org.json.JSONArray(json)
                     postQueue.clear()
                     for (i in 0 until array.length()) postQueue.add(array.getString(i))
                     totalPosts = postQueue.size
+                    Log.d(TAG, "Found $totalPosts posts")
 
                     if (totalPosts == 0) {
                         postSearchAttempts++
@@ -256,6 +274,7 @@ class LikesCollectorActivity : AppCompatActivity() {
                     tvProgress.text = getString(R.string.likes_found_posts, totalPosts)
                     handler.postDelayed({ openNextPost() }, 1000)
                 } catch (e: Exception) {
+                    Log.e(TAG, "onPostsFound error", e)
                     tvProgress.text = getString(R.string.status_error, e.message)
                     stopCollecting()
                 }
@@ -266,13 +285,8 @@ class LikesCollectorActivity : AppCompatActivity() {
         fun onLikeButtonClicked(status: String) {
             runOnUiThread {
                 if (!isCollecting) return@runOnUiThread
-                if (status == "found") {
-                    scrollAndCollectLikers()
-                } else {
-                    tvProgress.text = getString(R.string.likes_skip_post, postsProcessed, totalPosts)
-                    results[currentPostUrl] = mutableListOf()
-                    handler.postDelayed({ openNextPost() }, 1000)
-                }
+                Log.d(TAG, "onLikeButtonClicked: $status")
+                scrollAndCollectLikers()
             }
         }
 
@@ -287,28 +301,26 @@ class LikesCollectorActivity : AppCompatActivity() {
                         val name = array.getString(i)
                         if (!likers.contains(name)) likers.add(name)
                     }
+                    Log.d(TAG, "onLikersScrollResult: status=$status collected=${likers.size}")
+
                     when (status) {
                         "more" -> {
                             tvProgress.text = getString(
                                 R.string.likes_collecting_likers,
                                 postsProcessed, totalPosts, likers.size
                             )
-                            scrollAndCollectLikers()
-                        }
-                        "no_modal" -> {
-                            handler.postDelayed({ scrollAndCollectLikers() }, 1500)
+                            handler.postDelayed({ scrollAndCollectLikers() }, 1000)
                         }
                         else -> {
                             tvProgress.text = getString(
                                 R.string.likes_post_done,
                                 postsProcessed, totalPosts, likers.size
                             )
-                            handler.postDelayed({
-                                webView.loadUrl("https://www.instagram.com/$targetUsername/")
-                            }, 800)
+                            handler.postDelayed({ openNextPost() }, 800)
                         }
                     }
                 } catch (e: Exception) {
+                    Log.e(TAG, "onLikersScrollResult error", e)
                     handler.postDelayed({ openNextPost() }, 1000)
                 }
             }
