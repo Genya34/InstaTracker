@@ -85,9 +85,10 @@ class LikesCollectorActivity : AppCompatActivity() {
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
-            userAgentString = "Mozilla/5.0 (Linux; Android 13; Pixel 7) " +
+            // Десктопный user agent — Instagram показывает полные страницы включая /liked_by/
+            userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
                 "AppleWebKit/537.36 (KHTML, like Gecko) " +
-                "Chrome/120.0.0.0 Mobile Safari/537.36"
+                "Chrome/120.0.0.0 Safari/537.36"
             loadWithOverviewMode = true
             useWideViewPort = true
             setSupportZoom(true)
