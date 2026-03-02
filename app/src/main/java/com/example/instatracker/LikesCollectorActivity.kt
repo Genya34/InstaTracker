@@ -16,6 +16,7 @@ import android.widget.*
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
+import kotlinx.coroutines.*
 
 class LikesCollectorActivity : AppCompatActivity() {
 
@@ -29,17 +30,18 @@ class LikesCollectorActivity : AppCompatActivity() {
     private var targetUsername = ""
     private var isCollecting = false
     private val handler = Handler(Looper.getMainLooper())
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private val postQueue = mutableListOf<String>()
     private val results = mutableMapOf<String, MutableList<String>>()
 
-    private var currentPostUrl = ""
     private var postsProcessed = 0
     private var totalPosts = 0
     private var postSearchAttempts = 0
     private val maxPostSearchAttempts = 5
 
     private var jsCode = ""
+    private var cookies = ""
 
     companion object {
         const val EXTRA_USERNAME = "username"
@@ -85,10 +87,9 @@ class LikesCollectorActivity : AppCompatActivity() {
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
-            // Десктопный user agent — Instagram показывает полные страницы включая /liked_by/
-            userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+            userAgentString = "Mozilla/5.0 (Linux; Android 13; Pixel 7) " +
                 "AppleWebKit/537.36 (KHTML, like Gecko) " +
-                "Chrome/120.0.0.0 Safari/537.36"
+                "Chrome/120.0.0.0 Mobile Safari/537.36"
             loadWithOverviewMode = true
             useWideViewPort = true
             setSupportZoom(true)
@@ -104,7 +105,6 @@ class LikesCollectorActivity : AppCompatActivity() {
         webView.addJavascriptInterface(JSInterface(), "Android")
 
         webView.webViewClient = object : WebViewClient() {
-
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 if (!isCollecting) tvTitle.text = getString(R.string.browser_loading)
             }
@@ -117,30 +117,11 @@ class LikesCollectorActivity : AppCompatActivity() {
                 }
 
                 val safeUrl = url ?: ""
-                val isLikedBy = safeUrl.contains("liked_by")
-                val isPost = safeUrl.contains("/p/") && !isLikedBy
                 val isProfile = safeUrl.contains("instagram.com/$targetUsername")
-                    && !isPost && !isLikedBy
 
-                tvProgress.text = "URL: ...${safeUrl.takeLast(40)}\n" +
-                    "liked=$isLikedBy post=$isPost profile=$isProfile"
-
-                when {
-                    isLikedBy -> {
-                        handler.postDelayed({ scrollAndCollectLikers() }, 2500)
-                    }
-                    isPost -> {
-                        val likedByUrl = safeUrl.trimEnd('/') + "/liked_by/"
-                        tvProgress.text = "Редирект: ...${likedByUrl.takeLast(40)}"
-                        handler.postDelayed({ webView.loadUrl(likedByUrl) }, 1000)
-                    }
-                    isProfile -> {
-                        postSearchAttempts = 0
-                        handler.postDelayed({ tryCollectPostLinks() }, 3000)
-                    }
-                    else -> {
-                        tvProgress.text = "Неизвестный URL:\n${safeUrl.takeLast(60)}"
-                    }
+                if (isProfile) {
+                    postSearchAttempts = 0
+                    handler.postDelayed({ tryCollectPostLinks() }, 3000)
                 }
             }
 
@@ -167,23 +148,128 @@ class LikesCollectorActivity : AppCompatActivity() {
         handler.postDelayed({ evalJs("collectPostLinks($POSTS_TO_COLLECT);") }, 1500)
     }
 
+    // Получаем shortcode поста из URL вида /p/ABC123/ или /p/ABC123/liked_by/
+    private fun shortcodeFromUrl(url: String): String {
+        val parts = url.split("/").filter { it.isNotBlank() }
+        val pIndex = parts.indexOf("p")
+        return if (pIndex >= 0 && pIndex + 1 < parts.size) parts[pIndex + 1] else ""
+    }
+
+    // Используем GraphQL API Instagram для получения лайков
+    // Работает если пользователь залогинен (есть cookies сессии)
+    private fun fetchLikersViaApi(shortcode: String, postUrl: String) {
+        if (!isCollecting) return
+        tvProgress.text = "Запрос лайков [$postsProcessed/$totalPosts]..."
+
+        // Получаем cookies из WebView для авторизации запроса
+        val cookieStr = CookieManager.getInstance()
+            .getCookie("https://www.instagram.com") ?: ""
+
+        scope.launch {
+            try {
+                val likers = withContext(Dispatchers.IO) {
+                    fetchLikers(shortcode, cookieStr)
+                }
+
+                if (!isCollecting) return@launch
+
+                val list = results.getOrPut(postUrl) { mutableListOf() }
+                list.addAll(likers)
+
+                tvProgress.text = "Пост $postsProcessed: ${likers.size} лайков"
+                handler.postDelayed({ openNextPost() }, 500)
+
+            } catch (e: Exception) {
+                if (!isCollecting) return@launch
+                tvProgress.text = "Ошибка поста $postsProcessed: ${e.message?.take(40)}"
+                // Продолжаем со следующим постом
+                handler.postDelayed({ openNextPost() }, 500)
+            }
+        }
+    }
+
+    private fun fetchLikers(shortcode: String, cookieStr: String): List<String> {
+        val names = mutableListOf<String>()
+        var endCursor: String? = null
+        var hasNextPage = true
+        var attempts = 0
+
+        while (hasNextPage && isCollecting && attempts < 10) {
+            attempts++
+
+            // GraphQL запрос для получения лайков
+            val variables = if (endCursor != null) {
+                """{"shortcode":"$shortcode","include_reel":false,"first":24,"after":"$endCursor"}"""
+            } else {
+                """{"shortcode":"$shortcode","include_reel":false,"first":24}"""
+            }
+
+            val encodedVars = java.net.URLEncoder.encode(variables, "UTF-8")
+            val url = "https://www.instagram.com/graphql/query/" +
+                "?query_hash=d5d763b1e2acf209d62d22d184488e57" +
+                "&variables=$encodedVars"
+
+            val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+            connection.apply {
+                requestMethod = "GET"
+                setRequestProperty("Cookie", cookieStr)
+                setRequestProperty("X-Requested-With", "XMLHttpRequest")
+                setRequestProperty("Referer", "https://www.instagram.com/")
+                setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 13; Pixel 7) " +
+                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
+                connectTimeout = 10000
+                readTimeout = 10000
+            }
+
+            val responseCode = connection.responseCode
+            if (responseCode != 200) break
+
+            val response = connection.inputStream.bufferedReader().readText()
+            connection.disconnect()
+
+            val json = org.json.JSONObject(response)
+            val likers = json
+                .optJSONObject("data")
+                ?.optJSONObject("shortcode_media")
+                ?.optJSONObject("edge_liked_by")
+                ?: break
+
+            val edges = likers.optJSONArray("edges") ?: break
+            for (i in 0 until edges.length()) {
+                val node = edges.getJSONObject(i).optJSONObject("node") ?: continue
+                val username = node.optString("username")
+                if (username.isNotBlank()) names.add(username)
+            }
+
+            val pageInfo = likers.optJSONObject("page_info")
+            hasNextPage = pageInfo?.optBoolean("has_next_page") == true
+            endCursor = pageInfo?.optString("end_cursor")?.takeIf { it.isNotBlank() }
+
+            // Пауза между запросами чтобы не получить бан
+            if (hasNextPage) Thread.sleep(800)
+        }
+
+        return names
+    }
+
     private fun openNextPost() {
         if (!isCollecting) return
         if (postQueue.isEmpty()) {
             finishCollecting()
             return
         }
-        currentPostUrl = postQueue.removeAt(0)
+        val postUrl = postQueue.removeAt(0)
         postsProcessed++
-        val fullUrl = "https://www.instagram.com$currentPostUrl"
-        tvProgress.text = "[$postsProcessed/$totalPosts] Открываю:\n$currentPostUrl"
-        webView.loadUrl(fullUrl)
-    }
+        tvProgress.text = "[$postsProcessed/$totalPosts] Получаю лайки..."
 
-    private fun scrollAndCollectLikers() {
-        if (!isCollecting) return
-        tvProgress.text = "Собираю лайки [$postsProcessed/$totalPosts]..."
-        evalJs("scrollAndCollectLikers();")
+        val shortcode = shortcodeFromUrl(postUrl)
+        if (shortcode.isBlank()) {
+            // Не удалось извлечь shortcode — пропускаем
+            handler.postDelayed({ openNextPost() }, 300)
+            return
+        }
+
+        fetchLikersViaApi(shortcode, postUrl)
     }
 
     private fun finishCollecting() {
@@ -237,6 +323,7 @@ class LikesCollectorActivity : AppCompatActivity() {
 
     private fun stopCollecting() {
         isCollecting = false
+        scope.coroutineContext.cancelChildren()
         handler.removeCallbacksAndMessages(null)
         btnStart.visibility = View.VISIBLE
         btnStop.visibility = View.GONE
@@ -279,43 +366,18 @@ class LikesCollectorActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun onLikeButtonClicked(status: String) {
-            runOnUiThread {
-                if (!isCollecting) return@runOnUiThread
-                scrollAndCollectLikers()
-            }
+            // Больше не используется
         }
 
         @JavascriptInterface
         fun onLikersScrollResult(status: String, json: String) {
-            runOnUiThread {
-                if (!isCollecting) return@runOnUiThread
-                try {
-                    val array = org.json.JSONArray(json)
-                    val likers = results.getOrPut(currentPostUrl) { mutableListOf() }
-                    for (i in 0 until array.length()) {
-                        val name = array.getString(i)
-                        if (!likers.contains(name)) likers.add(name)
-                    }
-
-                    when (status) {
-                        "more" -> {
-                            tvProgress.text = "Прокрутка [$postsProcessed/$totalPosts] собрано: ${likers.size}"
-                            handler.postDelayed({ scrollAndCollectLikers() }, 1000)
-                        }
-                        else -> {
-                            tvProgress.text = "Пост $postsProcessed: ${likers.size} лайков"
-                            handler.postDelayed({ openNextPost() }, 800)
-                        }
-                    }
-                } catch (e: Exception) {
-                    handler.postDelayed({ openNextPost() }, 1000)
-                }
-            }
+            // Больше не используется
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        scope.cancel()
         handler.removeCallbacksAndMessages(null)
         isCollecting = false
     }
