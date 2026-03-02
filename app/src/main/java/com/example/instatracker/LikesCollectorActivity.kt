@@ -103,6 +103,7 @@ class LikesCollectorActivity : AppCompatActivity() {
         webView.addJavascriptInterface(JSInterface(), "Android")
 
         webView.webViewClient = object : WebViewClient() {
+
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 if (!isCollecting) tvTitle.text = getString(R.string.browser_loading)
             }
@@ -120,7 +121,6 @@ class LikesCollectorActivity : AppCompatActivity() {
                 val isProfile = safeUrl.contains("instagram.com/$targetUsername")
                     && !isPost && !isLikedBy
 
-                // Отладочная информация прямо на экране
                 tvProgress.text = "URL: ...${safeUrl.takeLast(40)}\n" +
                     "liked=$isLikedBy post=$isPost profile=$isProfile"
 
@@ -129,9 +129,8 @@ class LikesCollectorActivity : AppCompatActivity() {
                         handler.postDelayed({ scrollAndCollectLikers() }, 2500)
                     }
                     isPost -> {
-                        // Открылся пост — добавляем /liked_by/ и перегружаем
                         val likedByUrl = safeUrl.trimEnd('/') + "/liked_by/"
-                        tvProgress.text = "→ liked_by: ...${likedByUrl.takeLast(40)}"
+                        tvProgress.text = "Редирект: ...${likedByUrl.takeLast(40)}"
                         handler.postDelayed({ webView.loadUrl(likedByUrl) }, 1000)
                     }
                     isProfile -> {
@@ -139,7 +138,7 @@ class LikesCollectorActivity : AppCompatActivity() {
                         handler.postDelayed({ tryCollectPostLinks() }, 3000)
                     }
                     else -> {
-                        tvProgress.text = "⚠️ Неизвестный URL:\n${safeUrl.takeLast(60)}"
+                        tvProgress.text = "Неизвестный URL:\n${safeUrl.takeLast(60)}"
                     }
                 }
             }
@@ -169,7 +168,10 @@ class LikesCollectorActivity : AppCompatActivity() {
 
     private fun openNextPost() {
         if (!isCollecting) return
-        if (postQueue.isEmpty()) { finishCollecting(); return }
+        if (postQueue.isEmpty()) {
+            finishCollecting()
+            return
+        }
         currentPostUrl = postQueue.removeAt(0)
         postsProcessed++
         val fullUrl = "https://www.instagram.com$currentPostUrl"
@@ -183,4 +185,137 @@ class LikesCollectorActivity : AppCompatActivity() {
         evalJs("scrollAndCollectLikers();")
     }
 
-    priva
+    private fun finishCollecting() {
+        isCollecting = false
+        handler.removeCallbacksAndMessages(null)
+        btnStart.visibility = View.VISIBLE
+        btnStop.visibility = View.GONE
+        progressBar.visibility = View.GONE
+
+        val totalLikers = results.values.sumOf { it.size }
+        tvProgress.text = getString(R.string.likes_done, postsProcessed, totalLikers)
+        tvTitle.text = getString(R.string.likes_title, targetUsername)
+
+        val encoded = results.entries.joinToString("\n") { (url, likers) ->
+            "$url|${likers.joinToString(",")}"
+        }
+        setResult(RESULT_OK, Intent().apply {
+            putExtra(EXTRA_RESULT, encoded)
+            putExtra(EXTRA_ACCOUNT_ID, intent.getLongExtra(EXTRA_ACCOUNT_ID, 0))
+        })
+
+        android.app.AlertDialog.Builder(this)
+            .setTitle(getString(R.string.likes_done_title, postsProcessed))
+            .setMessage(getString(R.string.likes_done_message, totalLikers))
+            .setPositiveButton(getString(R.string.btn_save)) { _, _ -> finish() }
+            .setNegativeButton(getString(R.string.btn_cancel)) { _, _ -> }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun startCollecting() {
+        isCollecting = true
+        postQueue.clear()
+        results.clear()
+        postsProcessed = 0
+        totalPosts = 0
+        postSearchAttempts = 0
+
+        btnStart.visibility = View.GONE
+        btnStop.visibility = View.VISIBLE
+        progressBar.visibility = View.VISIBLE
+        tvProgress.text = getString(R.string.likes_collecting_posts)
+
+        val currentUrl = webView.url ?: ""
+        if (currentUrl.contains("instagram.com/$targetUsername")) {
+            tryCollectPostLinks()
+        } else {
+            webView.loadUrl("https://www.instagram.com/$targetUsername/")
+        }
+    }
+
+    private fun stopCollecting() {
+        isCollecting = false
+        handler.removeCallbacksAndMessages(null)
+        btnStart.visibility = View.VISIBLE
+        btnStop.visibility = View.GONE
+        progressBar.visibility = View.GONE
+        tvProgress.text = getString(R.string.likes_stopped, postsProcessed)
+    }
+
+    inner class JSInterface {
+
+        @JavascriptInterface
+        fun onPostsFound(json: String) {
+            runOnUiThread {
+                if (!isCollecting) return@runOnUiThread
+                try {
+                    val array = org.json.JSONArray(json)
+                    postQueue.clear()
+                    for (i in 0 until array.length()) postQueue.add(array.getString(i))
+                    totalPosts = postQueue.size
+
+                    if (totalPosts == 0) {
+                        postSearchAttempts++
+                        if (postSearchAttempts < maxPostSearchAttempts) {
+                            tvProgress.text = "Жду постов… попытка $postSearchAttempts"
+                            handler.postDelayed({ tryCollectPostLinks() }, 2000)
+                        } else {
+                            tvProgress.text = getString(R.string.likes_no_posts)
+                            stopCollecting()
+                        }
+                        return@runOnUiThread
+                    }
+
+                    tvProgress.text = getString(R.string.likes_found_posts, totalPosts)
+                    handler.postDelayed({ openNextPost() }, 1000)
+                } catch (e: Exception) {
+                    tvProgress.text = getString(R.string.status_error, e.message)
+                    stopCollecting()
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun onLikeButtonClicked(status: String) {
+            runOnUiThread {
+                if (!isCollecting) return@runOnUiThread
+                scrollAndCollectLikers()
+            }
+        }
+
+        @JavascriptInterface
+        fun onLikersScrollResult(status: String, json: String) {
+            runOnUiThread {
+                if (!isCollecting) return@runOnUiThread
+                try {
+                    val array = org.json.JSONArray(json)
+                    val likers = results.getOrPut(currentPostUrl) { mutableListOf() }
+                    for (i in 0 until array.length()) {
+                        val name = array.getString(i)
+                        if (!likers.contains(name)) likers.add(name)
+                    }
+
+                    when (status) {
+                        "more" -> {
+                            tvProgress.text = "Прокрутка [$postsProcessed/$totalPosts] собрано: ${likers.size}"
+                            handler.postDelayed({ scrollAndCollectLikers() }, 1000)
+                        }
+                        else -> {
+                            tvProgress.text = "Пост $postsProcessed: ${likers.size} лайков"
+                            handler.postDelayed({ openNextPost() }, 800)
+                        }
+                    }
+                } catch (e: Exception) {
+                    handler.postDelayed({ openNextPost() }, 1000)
+                }
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacksAndMessages(null)
+        isCollecting = false
+    }
+}
